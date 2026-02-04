@@ -23,3 +23,9 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arcadia-Spawn-Dimension-JAR
+          path: build/libs/*.jar

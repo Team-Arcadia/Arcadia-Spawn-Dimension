@@ -17,10 +17,15 @@ out
 build
 .gradle
 
+# vs code
+.vscode/
+
 # other
 eclipse
 run
 runs
 run-data
+src_backup/
+*.log
 
 repo
