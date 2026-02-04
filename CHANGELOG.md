@@ -1,5 +1,25 @@
 # CHANGELOG / JOURNAL DES MODIFICATIONS
 
+## [1.4.2] - 2026-02-04
+
+### 🇺🇸 English
+#### Added
+- **GitHub Workflow**: Automatically builds and uploads the mod JAR as a GitHub Action artifact.
+
+#### Fixed
+- **Repository Cleanup**: Removed unnecessary files (`src_backup`, `.vscode`, build artifacts) and updated `.gitignore`.
+
+---
+
+### 🇫🇷 Français
+#### Ajouté
+- **Workflow GitHub** : Compilation et mise à disposition automatique du JAR du mod en tant qu'artefact GitHub Action.
+
+#### Fixé
+- **Nettoyage du Dépôt** : Suppression des fichiers inutiles (`src_backup`, `.vscode`, artefacts de build) et mise à jour du `.gitignore`.
+
+______________________________________________________________________
+
 ## [1.4.1] - 2026-02-03
 
 ### 🇺🇸 English

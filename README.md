@@ -1,6 +1,6 @@
 # Arcadia Spawn
 
-![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red) ![Version](https://img.shields.io/badge/version-1.4.1-blue)
+![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red) ![Version](https://img.shields.io/badge/version-1.4.2-blue)
 
 **[EN]** Advanced spawn management and dynamic lobby menu for the Arcadia server.
 **[FR]** Gestion avancée du spawn et menu lobby dynamique pour le serveur Arcadia.
