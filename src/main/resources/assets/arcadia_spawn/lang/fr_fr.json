@@ -1,0 +1,17 @@
+{
+    "arcadiaspawn.menu.title": "Lobby Arcadia",
+    "arcadiaspawn.command.setlobby.success": "Point lobby '%s' sauvegardé avec succès !",
+    "arcadiaspawn.command.dellobby.success": "Point lobby '%s' supprimé avec succès.",
+    "arcadiaspawn.command.dellobby.fail": "Point lobby '%s' introuvable dans cette dimension.",
+    "arcadiaspawn.command.reload.success": "Configuration lobby rechargée avec succès !",
+    "arcadiaspawn.command.spawn.fail_dim": "La dimension 'arcadia:spawn' est introuvable !",
+    "arcadiaspawn.command.spawn.fail_unset": "Le spawn n'est pas défini. Utilisez /setlobbyspawn d'abord.",
+    "arcadiaspawn.command.setspawn.success": "Spawn Arcadia défini ici.",
+    "arcadiaspawn.teleport.success": "Téléportation vers %s...",
+    "arcadiaspawn.teleport.fail": "Erreur : Dimension introuvable.",
+    "arcadiaspawn.command.rtp.fail_dim": "Vous devez être dans l'Overworld pour utiliser le RTP !",
+    "arcadiaspawn.command.rtp.limit_reached": "Limite de RTP atteinte ! Téléportation à votre dernière position RTP...",
+    "arcadiaspawn.command.rtp.no_last_pos": "Limite atteinte, mais aucune position précédente trouvée !",
+    "arcadiaspawn.command.rtp.success": "RTP réussi en %s, %s, %s !",
+    "arcadiaspawn.command.rtp.fail_safe": "Impossible de trouver une position sûre après plusieurs essais."
+}
