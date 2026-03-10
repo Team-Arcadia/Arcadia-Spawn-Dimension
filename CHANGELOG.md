@@ -1,5 +1,33 @@
 # CHANGELOG / JOURNAL DES MODIFICATIONS
 
+## [1.4.2] - 2026-03-10
+
+### 🇺🇸 English
+#### Added
+- **Slot Bypass System**: New system allowing specific permission holders to bypass server slot limits.
+  - Config file: `config/arcadia/arcadialobbyspawn/slot_bypass.toml`
+  - Permission node: `arcadia_spawn.slots.bypass` (LuckPerms compatible via NeoForge PermissionAPI)
+  - Configurable: `max_slots`, `kick_message`, `enabled`
+
+#### Fixed
+- **`/setlobbyspawn` Command**: Fixed the command not being registered. The method existed but was never wired to the Brigadier dispatcher.
+- **Typo**: Fixed "Teleposting" → "Teleporting" in English locale.
+
+---
+
+### 🇫🇷 Français
+#### Ajouté
+- **Système de Bypass de Slots** : Nouveau système permettant à certains joueurs de bypass la limite de slots du serveur.
+  - Fichier de config : `config/arcadia/arcadialobbyspawn/slot_bypass.toml`
+  - Permission : `arcadia_spawn.slots.bypass` (compatible LuckPerms via NeoForge PermissionAPI)
+  - Configurable : `max_slots`, `kick_message`, `enabled`
+
+#### Corrigé
+- **Commande `/setlobbyspawn`** : Correction de la commande qui n'était pas enregistrée. La méthode existait mais n'était jamais liée au dispatcher Brigadier.
+- **Coquille** : Correction de "Teleposting" → "Teleporting" dans la locale anglaise.
+
+______________________________________________________________________
+
 ## [1.4.2] - 2026-02-04
 
 ### 🇺🇸 English

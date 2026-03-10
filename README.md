@@ -40,6 +40,16 @@ The dimension is fully configurable via `config/arcadia/arcadialobbyspawn/config
 - `/arcadialobby reload` *(Admin)*: Reloads configuration from disk.
 - `/arcadiartp`: Random teleport in Overworld (Configurable limit & radius).
 
+### Slot Bypass System
+Allows specific permission holders to join even when the server is full.
+- **Config file**: `config/arcadia/arcadialobbyspawn/slot_bypass.toml`
+  - `enabled`: Enable/disable the system.
+  - `max_slots`: Maximum player count before bypass is required.
+  - `kick_message`: Custom kick message (supports `&` color codes).
+- **Permission node**: `arcadia_spawn.slots.bypass`
+  - Assign this permission in **LuckPerms** to any group or player.
+  - Uses NeoForge PermissionAPI (native LuckPerms compatibility).
+
 ---
 
 ## 🇫🇷 Français (FR)
@@ -74,6 +84,16 @@ La dimension est entièrement configurable via `config/arcadia/arcadialobbyspawn
 - `/setlobbyspawn` *(Admin)* : Définit le point de spawn global.
 - `/arcadialobby reload` *(Admin)* : Recharge la configuration.
 - `/arcadiartp` : Téléportation aléatoire dans l'Overworld (Limite & rayon configurables).
+
+### Système de Bypass de Slots
+Permet à certains joueurs de se connecter même quand le serveur est plein.
+- **Fichier de config** : `config/arcadia/arcadialobbyspawn/slot_bypass.toml`
+  - `enabled` : Activer/désactiver le système.
+  - `max_slots` : Nombre max de joueurs avant activation du bypass.
+  - `kick_message` : Message de kick personnalisé (supporte les codes couleur `&`).
+- **Permission** : `arcadia_spawn.slots.bypass`
+  - Assignez cette permission dans **LuckPerms** à n'importe quel groupe ou joueur.
+  - Utilise le PermissionAPI NeoForge (compatibilité native avec LuckPerms).
 
 ---
 

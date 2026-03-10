@@ -104,6 +104,11 @@ public class ModCommands {
                 dispatcher.register(Commands.literal("spawn")
                                 .executes(ModCommands::teleportToSpawn));
 
+                // Admin command: /setlobbyspawn (set spawn point at current position)
+                dispatcher.register(Commands.literal("setlobbyspawn")
+                                .requires(source -> source.hasPermission(2))
+                                .executes(ModCommands::setSpawn));
+
                 // Command /arcadiartp - unchanged
                 RTPCommand.register(dispatcher);
         }

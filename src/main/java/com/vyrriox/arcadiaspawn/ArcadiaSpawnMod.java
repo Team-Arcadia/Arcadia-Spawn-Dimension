@@ -16,6 +16,10 @@ public class ArcadiaSpawnMod {
         modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.COMMON,
                 com.vyrriox.arcadiaspawn.config.SpawnConfig.SPEC, "arcadia/arcadialobbyspawn/config.toml");
 
+        // Register Slot Bypass Config
+        modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER,
+                com.vyrriox.arcadiaspawn.config.SlotBypassConfig.SPEC, "arcadia/arcadialobbyspawn/slot_bypass.toml");
+
         // Register Menus - REMOVED for Server Only Mod
         // com.vyrriox.arcadiaspawn.lobby.ModMenuTypes.register(modEventBus);
 

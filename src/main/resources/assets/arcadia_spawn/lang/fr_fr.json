@@ -13,5 +13,6 @@
     "arcadiaspawn.command.rtp.limit_reached": "Limite de RTP atteinte ! Téléportation à votre dernière position RTP...",
     "arcadiaspawn.command.rtp.no_last_pos": "Limite atteinte, mais aucune position précédente trouvée !",
     "arcadiaspawn.command.rtp.success": "RTP réussi en %s, %s, %s !",
-    "arcadiaspawn.command.rtp.fail_safe": "Impossible de trouver une position sûre après plusieurs essais."
+    "arcadiaspawn.command.rtp.fail_safe": "Impossible de trouver une position sûre après plusieurs essais.",
+    "arcadiaspawn.slotbypass.kick": "Le serveur est plein ! Seuls les joueurs VIP peuvent se connecter."
 }
