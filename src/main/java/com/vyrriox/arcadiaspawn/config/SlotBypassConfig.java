@@ -19,22 +19,22 @@ public class SlotBypassConfig {
 
         Values(ModConfigSpec.Builder builder) {
             builder.push("Slot Bypass");
-            builder.comment("Configuration for the slot bypass system.",
-                    "Players with the permission 'arcadia_spawn.slots.bypass' can join even when the server is full.",
-                    "Assign this permission to LuckPerms groups/players as needed.");
+            builder.comment("Configuration du systeme de bypass de slots.",
+                    "Les joueurs avec la permission 'arcadia_spawn.slots.bypass' peuvent se connecter meme si le serveur est plein.",
+                    "Assignez cette permission aux groupes/joueurs LuckPerms selon vos besoins.");
 
-            enabled = builder.comment("Enable or disable the slot bypass system.")
+            enabled = builder.comment("Activer ou desactiver le systeme de bypass de slots.")
                     .define("enabled", false);
 
             maxSlots = builder.comment(
-                    "Maximum number of player slots before bypass is required.",
-                    "Players without the bypass permission will be kicked when the server reaches this number.")
+                    "Nombre maximum de joueurs avant que le bypass soit necessaire.",
+                    "Les joueurs sans la permission de bypass seront kick quand le serveur atteint ce nombre.")
                     .defineInRange("max_slots", 20, 1, 1000);
 
             kickMessage = builder.comment(
-                    "The kick message shown to players without bypass permission when the server is full.",
-                    "Supports Minecraft formatting codes with '&' prefix.")
-                    .define("kick_message", "&cThe server is full! &7Only VIP players can join right now.");
+                    "Le message de kick affiche aux joueurs sans permission de bypass quand le serveur est plein.",
+                    "Supporte les codes de formatage Minecraft avec le prefixe '&'.")
+                    .define("kick_message", "&cLe serveur est plein ! &7Seuls les joueurs VIP peuvent se connecter.");
 
             builder.pop();
         }
