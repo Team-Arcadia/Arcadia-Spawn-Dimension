@@ -1,6 +1,20 @@
 # CHANGELOG / JOURNAL DES MODIFICATIONS
 
-## [1.4.2] - 2026-03-10
+## [1.4.3] - 2026-03-11
+
+### 🇺🇸 English
+#### Changed
+- Version bump and recompile for release.
+
+---
+
+### 🇫🇷 Français
+#### Changé
+- Mise à jour de la version et recompilation pour la release.
+
+______________________________________________________________________
+
+## [1.4.2] - 2026-03-11
 
 ### 🇺🇸 English
 #### Added
@@ -8,6 +22,9 @@
   - Config file: `config/arcadia/arcadialobbyspawn/slot_bypass.toml`
   - Permission node: `arcadia_spawn.slots.bypass` (LuckPerms compatible via NeoForge PermissionAPI)
   - Configurable: `max_slots`, `kick_message`, `enabled`
+- **Tweaks (Mixins)**: New configurable tweaks added to `slot_bypass.toml`
+  - `fake_max_slots_enabled`: Displays `max_slots` in the server list instead of the real max.
+  - `hide_join_leave_messages`: Prevents join/leave message spam in chat.
 
 #### Fixed
 - **`/setlobbyspawn` Command**: Fixed the command not being registered. The method existed but was never wired to the Brigadier dispatcher.
@@ -21,6 +38,9 @@
   - Fichier de config : `config/arcadia/arcadialobbyspawn/slot_bypass.toml`
   - Permission : `arcadia_spawn.slots.bypass` (compatible LuckPerms via NeoForge PermissionAPI)
   - Configurable : `max_slots`, `kick_message`, `enabled`
+- **Ajustements (Mixins)** : Nouveaux ajustements configurables ajoutés à `slot_bypass.toml`
+  - `fake_max_slots_enabled` : Affiche `max_slots` dans la liste de serveurs à la place du maximum réel.
+  - `hide_join_leave_messages` : Empêche le spam des messages de connexion/déconnexion dans le chat.
 
 #### Corrigé
 - **Commande `/setlobbyspawn`** : Correction de la commande qui n'était pas enregistrée. La méthode existait mais n'était jamais liée au dispatcher Brigadier.

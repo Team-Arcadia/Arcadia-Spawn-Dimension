@@ -1,6 +1,6 @@
 # Arcadia Spawn
 
-![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red) ![Version](https://img.shields.io/badge/version-1.4.2-blue)
+![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red) ![Version](https://img.shields.io/badge/version-1.4.3-blue)
 
 **[EN]** Advanced spawn management and dynamic lobby menu for the Arcadia server.
 **[FR]** Gestion avancée du spawn et menu lobby dynamique pour le serveur Arcadia.
@@ -50,6 +50,11 @@ Allows specific permission holders to join even when the server is full.
   - Assign this permission in **LuckPerms** to any group or player.
   - Uses NeoForge PermissionAPI (native LuckPerms compatibility).
 
+### Tweaks (Fake Slots & Chat Messages)
+The mod provides tweaks configurable via `config/arcadia/arcadialobbyspawn/slot_bypass.toml`.
+- `fake_max_slots_enabled`: When enabled, the server list will display the `max_slots` value as the maximum capacity rather than the real server capacity, helping to prevent connection spam when players think there's room.
+- `hide_join_leave_messages`: When enabled, hides the default vanilla "Player joined the game" and "Player left the game" chat messages.
+
 ---
 
 ## 🇫🇷 Français (FR)
@@ -94,6 +99,11 @@ Permet à certains joueurs de se connecter même quand le serveur est plein.
 - **Permission** : `arcadia_spawn.slots.bypass`
   - Assignez cette permission dans **LuckPerms** à n'importe quel groupe ou joueur.
   - Utilise le PermissionAPI NeoForge (compatibilité native avec LuckPerms).
+
+### Tweaks (Faux Slots & Messages Chat)
+Le mod fournit des ajustements configurables via `config/arcadia/arcadialobbyspawn/slot_bypass.toml`.
+- `fake_max_slots_enabled` : Si activé, la liste des serveurs affichera la valeur de `max_slots` comme capacité maximale plutôt que la vraie capacité du serveur, évitant que les joueurs spamment la connexion pensant qu'il reste de la place.
+- `hide_join_leave_messages` : Si activé, masque les messages Vanilla par défaut "Joueur a rejoint la partie" et "Joueur a quitté la partie" dans le tchat.
 
 ---
 

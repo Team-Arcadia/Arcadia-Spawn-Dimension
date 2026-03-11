@@ -16,6 +16,8 @@ public class SlotBypassConfig {
         public final ModConfigSpec.ConfigValue<Boolean> enabled;
         public final ModConfigSpec.ConfigValue<Integer> maxSlots;
         public final ModConfigSpec.ConfigValue<String> kickMessage;
+        public final ModConfigSpec.ConfigValue<Boolean> fakeMaxSlotsEnabled;
+        public final ModConfigSpec.ConfigValue<Boolean> hideJoinLeaveMessages;
 
         Values(ModConfigSpec.Builder builder) {
             builder.push("Slot Bypass");
@@ -35,6 +37,16 @@ public class SlotBypassConfig {
                     "Le message de kick affiche aux joueurs sans permission de bypass quand le serveur est plein.",
                     "Supporte les codes de formatage Minecraft avec le prefixe '&'.")
                     .define("kick_message", "&cLe serveur est plein ! &7Seuls les joueurs VIP peuvent se connecter.");
+
+            fakeMaxSlotsEnabled = builder.comment(
+                    "Si active, le nombre 'max_slots' ci-dessus sera affiche dans la liste des serveurs comme le nombre maximum de joueurs.",
+                    "Cela permet de donner l'impression que le serveur est plein, meme si la vraie limite est plus elevee.")
+                    .define("fake_max_slots_enabled", true);
+
+            hideJoinLeaveMessages = builder.comment(
+                    "Si active, les messages natifs 'Joueur a rejoint la partie' et 'Joueur a quitte la partie' seront masques.",
+                    "Utile pour eviter le spam dans le chat lorsqu'il y a beaucoup de connexions/deconnexions.")
+                    .define("hide_join_leave_messages", true);
 
             builder.pop();
         }
