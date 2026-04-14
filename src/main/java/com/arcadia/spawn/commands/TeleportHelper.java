@@ -127,26 +127,42 @@ public final class TeleportHelper {
 
     // ── LuckPerms meta override ─────────────────────────────────────────────
 
+    private static final boolean LUCKPERMS_AVAILABLE = isLuckPermsPresent();
+
+    private static boolean isLuckPermsPresent() {
+        try {
+            Class.forName("net.luckperms.api.LuckPermsProvider");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
     /**
      * Reads a LuckPerms meta value for a player.
      * Meta key format: "arcadia_spawn.<key>" (e.g. "arcadia_spawn.spawn_tp.warmup")
-     * Returns defaultValue if meta not found or LuckPerms not present.
+     * Returns defaultValue if LuckPerms is absent or meta not set.
      */
     private static int getMetaOverride(ServerPlayer player, String key, int defaultValue) {
-        try {
-            net.luckperms.api.LuckPerms lp = net.luckperms.api.LuckPermsProvider.get();
-            net.luckperms.api.model.user.User user = lp.getUserManager().getUser(player.getUUID());
-            if (user == null) return defaultValue;
+        if (!LUCKPERMS_AVAILABLE) return defaultValue;
+        return LuckPermsMetaReader.read(player, "arcadia_spawn." + key, defaultValue);
+    }
 
-            String metaKey = "arcadia_spawn." + key;
-            String value = user.getCachedData().getMetaData().getMetaValue(metaKey);
-            if (value != null) {
-                return Integer.parseInt(value);
-            }
-        } catch (Exception ignored) {
-            // LuckPerms not available or meta not set
+    /**
+     * Isolated in its own class so the JVM only loads LuckPerms classes
+     * when this class is first accessed (i.e. when LUCKPERMS_AVAILABLE is true).
+     */
+    private static final class LuckPermsMetaReader {
+        static int read(ServerPlayer player, String metaKey, int defaultValue) {
+            try {
+                var lp = net.luckperms.api.LuckPermsProvider.get();
+                var user = lp.getUserManager().getUser(player.getUUID());
+                if (user == null) return defaultValue;
+                String value = user.getCachedData().getMetaData().getMetaValue(metaKey);
+                if (value != null) return Integer.parseInt(value);
+            } catch (Exception ignored) {}
+            return defaultValue;
         }
-        return defaultValue;
     }
 
     // ── Internal ────────────────────────────────────────────────────────────
