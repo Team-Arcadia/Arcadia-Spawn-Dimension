@@ -48,10 +48,17 @@ public class ArcadiaSpawnMod {
                     true
             ));
 
-            // Register tab opener — when hub card (sortOrder=1) is clicked,
-            // the hub sends a packet to server which calls this opener
-            ArcadiaModRegistry.registerTabOpener(1, player -> {
+            // Unique tab index (high value to avoid conflicts with other mods)
+            final int SPAWN_TAB_INDEX = 100;
+
+            // Register tab opener at unique index
+            ArcadiaModRegistry.registerTabOpener(SPAWN_TAB_INDEX, player -> {
                 com.arcadia.spawn.commands.SpawnCommands.openLobbyForPlayer(player);
+            });
+
+            // Card click handler sends to our unique tab index (not sortOrder)
+            ArcadiaModRegistry.registerCardClickHandler("spawn", () -> {
+                ArcadiaModRegistry.openTabClient(SPAWN_TAB_INDEX);
             });
 
             LOGGER.info("Arcadia Spawn initialized — hub card registered at position 1.");
