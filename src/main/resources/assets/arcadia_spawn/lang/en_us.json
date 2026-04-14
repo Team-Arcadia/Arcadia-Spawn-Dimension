@@ -23,6 +23,10 @@
     "arcadia_spawn.command.rtp.success": "RTP successful to %s, %s, %s!",
     "arcadia_spawn.command.rtp.fail_safe": "Could not find a safe position after multiple attempts.",
 
+    "arcadia_spawn.tp.warmup": "Teleporting in %ss... Don't move!",
+    "arcadia_spawn.tp.cancelled": "Teleport cancelled — you moved!",
+    "arcadia_spawn.tp.cooldown": "Teleport on cooldown (%s)",
+
     "arcadia_spawn.slotbypass.kick": "The server is full! Only VIP players can join right now.",
 
     "key.arcadia_spawn.open_lobby": "Open Lobby Menu",

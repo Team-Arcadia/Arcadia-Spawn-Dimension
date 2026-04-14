@@ -41,14 +41,15 @@ public class ArcadiaSpawnMod {
             LobbyManager.init();
             LocalizationManager.init();
 
-            // Register hub card — sortOrder 1 = first position in Hub
+            // Register hub card — row 0, sortOrder 0 = first card top row
             ArcadiaModRegistry.registerCard(new ArcadiaModCard(
                     "spawn",
                     "\uD83C\uDFE0",
                     "arcadia_spawn.hub.title",
                     "arcadia_spawn.hub.subtitle",
                     0x55AA55,
-                    1,
+                    0,
+                    0,
                     true
             ));
 

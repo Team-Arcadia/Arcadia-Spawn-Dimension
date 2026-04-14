@@ -23,6 +23,10 @@
     "arcadia_spawn.command.rtp.success": "RTP réussi en %s, %s, %s !",
     "arcadia_spawn.command.rtp.fail_safe": "Impossible de trouver une position sûre après plusieurs essais.",
 
+    "arcadia_spawn.tp.warmup": "Téléportation dans %ss... Ne bougez pas !",
+    "arcadia_spawn.tp.cancelled": "Téléportation annulée — vous avez bougé !",
+    "arcadia_spawn.tp.cooldown": "Téléportation en cooldown (%s)",
+
     "arcadia_spawn.slotbypass.kick": "Le serveur est plein ! Seuls les joueurs VIP peuvent se connecter.",
 
     "key.arcadia_spawn.open_lobby": "Ouvrir le menu Lobby",

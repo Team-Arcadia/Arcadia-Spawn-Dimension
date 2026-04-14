@@ -26,6 +26,11 @@ neoForge {
 
 dependencies {
     compileOnly files('libs/arcadia-lib-1.2.0.jar')
+    compileOnly "net.luckperms:api:5.4"
+}
+
+repositories {
+    maven { url = 'https://repo.maven.apache.org/maven2' }
 }
 
 // Expand properties into mods.toml

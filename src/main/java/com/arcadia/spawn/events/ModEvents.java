@@ -3,6 +3,7 @@ package com.arcadia.spawn.events;
 import com.arcadia.spawn.ArcadiaSpawnMod;
 import com.arcadia.spawn.commands.SpawnCommands;
 import com.arcadia.spawn.commands.DebugCommands;
+import com.arcadia.spawn.commands.TeleportHelper;
 import com.arcadia.spawn.config.SpawnConfig;
 import com.arcadia.spawn.world.SpawnData;
 import net.minecraft.core.registries.Registries;
@@ -15,6 +16,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.Set;
 
@@ -47,6 +49,18 @@ public class ModEvents {
                     ArcadiaSpawnMod.LOGGER.debug("First join: sent {} to {}.", player.getName().getString(), data.getDimensionId());
                 }
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onServerTick(ServerTickEvent.Post event) {
+        TeleportHelper.tick();
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            TeleportHelper.onDisconnect(player.getUUID());
         }
     }
 
