@@ -1,237 +1,171 @@
-# CHANGELOG / JOURNAL DES MODIFICATIONS
+# Changelog
+
+All notable changes to Arcadia Spawn are documented here.
+
+---
+
+## [1.5.0] - 2026-04-14
+
+### Added
+
+- **arcadia-lib Integration** — Full integration with arcadia-lib ecosystem. Hub card registered at first position. Uses ArcadiaMessages for themed messaging, TeleportManager for warmup/cooldown teleports.
+- **Debug Command Suite** — 13 diagnostic subcommands under `/arcadia_spawn debug`: status, spawn, dimension, lobbies, rtp, config, slots, player, reload_all, reset_visited, tps, lang.
+- **Teleport Warmup & Cooldown** — All teleports (/spawn, /lobby, /arcadiartp) now support configurable warmup delays and cooldowns via arcadia-lib TeleportManager with movement cancellation.
+- **Enhanced Configuration** — New config options: `force_spawn_on_first_join`, `force_spawn_on_respawn`, `rtp_cooldown_seconds`, `rtp_warmup_ticks`, `rtp_max_attempts`, `spawn_tp_warmup_ticks`, `spawn_tp_cooldown_seconds`, `lobby_tp_warmup_ticks`, `lobby_tp_cooldown_seconds`.
+- **Lobby Menu UX** — Glass pane borders, bilingual lore text ("Click to teleport | Cliquez pour vous tp").
+
+### Changed
+
+- **Package** — Moved from `com.vyrriox.arcadiaspawn` to `com.arcadia.spawn` for ecosystem consistency.
+- **Build System** — Migrated from `net.neoforged.gradle.userdev` to `net.neoforged.moddev` 2.0.140. Added arcadia-lib 1.2.0 as dependency.
+- **Side** — Changed from server-only to BOTH (client + server) for Hub integration.
+- **Command Structure** — Admin commands consolidated under `/arcadia_spawn` (was `/arcadialobby`). Player commands `/lobby`, `/spawn`, `/arcadiartp` unchanged.
+- **Config Paths** — Moved from `config/arcadia/arcadialobbyspawn/` to `config/arcadia/spawn/`. Lobby data now in `config/arcadia/spawn/lobbies/`.
+- **Mixin Config** — Renamed from `arcadiaspawn.mixins.json` to `arcadia_spawn.mixins.json`.
+- **NeoForge Version** — Updated to 21.1.219.
+
+### Fixed
+
+- **Spawn Dimension Bug** — `/setlobbyspawn` and `/arcadia_spawn setspawn` now store the dimension alongside coordinates. The spawn teleport correctly targets the dimension where spawn was set, not just `arcadia:spawn`. This prevents wrong-dimension teleports when spawn is set outside the spawn dimension.
+- **Respawn Bug** — Players dying without a bed/anchor are now correctly teleported to the configured spawn point instead of world spawn. Uses `server.execute()` to schedule after respawn completion.
+- **FTB Essentials /back Compatibility** — All teleportations now fire `EntityTeleportEvent.TeleportCommand` before executing, allowing FTB Essentials and other mods to record the pre-teleport position for `/back`.
+- **RTP Thread Safety** — Replaced `java.util.Random` with `ThreadLocalRandom` to eliminate synchronization contention.
+- **Kick Message** — Slot bypass kick message now bilingual by default (EN | FR).
+
+### Performance
+
+- **ThreadLocalRandom** — RTP safe position search uses lock-free random for better throughput.
+- **Configurable RTP Attempts** — `rtp_max_attempts` limits worst-case chunk loading (default 50).
+- **Zero Tick Handlers** — Mod registers no tick listeners. All logic is event-driven.
+
+---
+
+### Ajouts
+
+- **Integration arcadia-lib** — Integration complete avec l'ecosysteme arcadia-lib. Carte Hub en premiere position. Utilise ArcadiaMessages pour les messages themes, TeleportManager pour les teleportations avec warmup/cooldown.
+- **Suite de Commandes Debug** — 13 sous-commandes de diagnostic sous `/arcadia_spawn debug` : status, spawn, dimension, lobbies, rtp, config, slots, player, reload_all, reset_visited, tps, lang.
+- **Warmup & Cooldown de Teleportation** — Toutes les teleportations (/spawn, /lobby, /arcadiartp) supportent maintenant des delais de warmup et cooldowns configurables via le TeleportManager d'arcadia-lib avec annulation sur mouvement.
+- **Configuration Etendue** — Nouvelles options : `force_spawn_on_first_join`, `force_spawn_on_respawn`, `rtp_cooldown_seconds`, `rtp_warmup_ticks`, `rtp_max_attempts`, etc.
+- **UX Menu Lobby** — Bordures en vitres, texte de lore bilingue.
+
+### Modifications
+
+- **Package** — Deplacement de `com.vyrriox.arcadiaspawn` vers `com.arcadia.spawn`.
+- **Systeme de Build** — Migration vers `net.neoforged.moddev` 2.0.140 avec arcadia-lib 1.2.0.
+- **Side** — Passe de serveur uniquement a BOTH (client + serveur) pour l'integration Hub.
+- **Structure des Commandes** — Commandes admin sous `/arcadia_spawn` (etait `/arcadialobby`). `/lobby`, `/spawn`, `/arcadiartp` inchanges.
+- **Chemins de Config** — Deplaces de `config/arcadia/arcadialobbyspawn/` vers `config/arcadia/spawn/`.
+
+### Correctifs
+
+- **Bug Dimension Spawn** — `/setlobbyspawn` et `/arcadia_spawn setspawn` stockent maintenant la dimension avec les coordonnees. La teleportation cible correctement la dimension ou le spawn a ete defini.
+- **Bug Respawn** — Les joueurs mourant sans lit/ancre sont maintenant correctement teleportes au spawn configure au lieu du world spawn. Utilise `server.execute()` pour planifier apres la fin du respawn.
+- **Compatibilite FTB Essentials /back** — Toutes les teleportations declenchent maintenant `EntityTeleportEvent.TeleportCommand` avant execution, permettant a FTB Essentials et autres mods d'enregistrer la position pre-teleportation pour `/back`.
+- **Thread Safety RTP** — Remplacement de `java.util.Random` par `ThreadLocalRandom`.
+- **Message de Kick** — Message de kick bilingue par defaut (EN | FR).
+
+### Performance
+
+- **ThreadLocalRandom** — Recherche de position RTP sans verrou pour un meilleur debit.
+- **Tentatives RTP Configurables** — `rtp_max_attempts` limite le chargement de chunks worst-case.
+- **Zero Tick Handlers** — Le mod n'enregistre aucun listener de tick. Tout est evenementiel.
+
+---
 
 ## [1.4.3] - 2026-03-11
 
-### 🇺🇸 English
-#### Changed
-- Version bump and recompile for release.
+### Changed
+- **Version bump** — Recompile for release.
+
+### Modifications
+- **Bump de version** — Recompilation pour la release.
 
 ---
-
-### 🇫🇷 Français
-#### Changé
-- Mise à jour de la version et recompilation pour la release.
-
-______________________________________________________________________
 
 ## [1.4.2] - 2026-03-11
 
-### 🇺🇸 English
-#### Added
-- **Slot Bypass System**: New system allowing specific permission holders to bypass server slot limits.
-  - Config file: `config/arcadia/arcadialobbyspawn/slot_bypass.toml`
-  - Permission node: `arcadia_spawn.slots.bypass` (LuckPerms compatible via NeoForge PermissionAPI)
-  - Configurable: `max_slots`, `kick_message`, `enabled`
-- **Tweaks (Mixins)**: New configurable tweaks added to `slot_bypass.toml`
-  - `fake_max_slots_enabled`: Displays `max_slots` in the server list instead of the real max.
-  - `hide_join_leave_messages`: Prevents join/leave message spam in chat.
+### Added
+- **Slot Bypass System** — Permission-based slot limiting with `arcadia_spawn.slots.bypass` node.
+- **Mixins** — `fake_max_slots_enabled` and `hide_join_leave_messages` tweaks.
 
-#### Fixed
-- **`/setlobbyspawn` Command**: Fixed the command not being registered. The method existed but was never wired to the Brigadier dispatcher.
-- **Typo**: Fixed "Teleposting" → "Teleporting" in English locale.
+### Fixed
+- **`/setlobbyspawn`** — Command was not registered in dispatcher.
 
----
+### Ajouts
+- **Systeme de Bypass de Slots** — Limitation de slots basee sur les permissions.
+- **Mixins** — Ajustements `fake_max_slots_enabled` et `hide_join_leave_messages`.
 
-### 🇫🇷 Français
-#### Ajouté
-- **Système de Bypass de Slots** : Nouveau système permettant à certains joueurs de bypass la limite de slots du serveur.
-  - Fichier de config : `config/arcadia/arcadialobbyspawn/slot_bypass.toml`
-  - Permission : `arcadia_spawn.slots.bypass` (compatible LuckPerms via NeoForge PermissionAPI)
-  - Configurable : `max_slots`, `kick_message`, `enabled`
-- **Ajustements (Mixins)** : Nouveaux ajustements configurables ajoutés à `slot_bypass.toml`
-  - `fake_max_slots_enabled` : Affiche `max_slots` dans la liste de serveurs à la place du maximum réel.
-  - `hide_join_leave_messages` : Empêche le spam des messages de connexion/déconnexion dans le chat.
-
-#### Corrigé
-- **Commande `/setlobbyspawn`** : Correction de la commande qui n'était pas enregistrée. La méthode existait mais n'était jamais liée au dispatcher Brigadier.
-- **Coquille** : Correction de "Teleposting" → "Teleporting" dans la locale anglaise.
-
-______________________________________________________________________
-
-## [1.4.2] - 2026-02-04
-
-### 🇺🇸 English
-#### Added
-- **GitHub Workflow**: Automatically builds and uploads the mod JAR as a GitHub Action artifact.
-
-#### Fixed
-- **Repository Cleanup**: Removed unnecessary files (`src_backup`, `.vscode`, build artifacts) and updated `.gitignore`.
+### Correctifs
+- **`/setlobbyspawn`** — La commande n'etait pas enregistree dans le dispatcher.
 
 ---
-
-### 🇫🇷 Français
-#### Ajouté
-- **Workflow GitHub** : Compilation et mise à disposition automatique du JAR du mod en tant qu'artefact GitHub Action.
-
-#### Fixé
-- **Nettoyage du Dépôt** : Suppression des fichiers inutiles (`src_backup`, `.vscode`, artefacts de build) et mise à jour du `.gitignore`.
-
-______________________________________________________________________
 
 ## [1.4.1] - 2026-02-03
 
-### 🇺🇸 English
-#### Added
-- **Command Structure**: Consolidated lobby commands under `/arcadialobby` for better organization.
-- **New Command**: `/arcadialobby edit <name> [description|item|location]` to modify existing lobby warps.
-- **New Command**: `/arcadialobby tp <name>` to teleport directly to a lobby warp without the menu.
-- **Optimization**: Switched `LobbyManager` to `CopyOnWriteArrayList` for better thread safety and performance.
+### Added
+- **Command consolidation** — Commands grouped under `/arcadialobby`.
+- **Edit command** — `/arcadialobby edit <name> [description|item|location]`.
+- **Direct TP** — `/arcadialobby tp <name>`.
 
-#### Changed
-- **Moved**: `/setlobbytp` is now `/arcadialobby setlobbytp`.
-- **Moved**: `/dellobbytp` is now `/arcadialobby dellobbytp`.
-
-#### Fixed
-- **Stability**: improved error handling to prevent data corruption.
+### Ajouts
+- **Consolidation des commandes** — Regroupement sous `/arcadialobby`.
+- **Commande Edit** — `/arcadialobby edit <nom> [description|item|location]`.
+- **TP Direct** — `/arcadialobby tp <nom>`.
 
 ---
-
-### 🇫🇷 Français
-#### Ajouté
-- **Structure des Commandes** : Regroupement des commandes de lobby sous `/arcadialobby` pour une meilleure organisation.
-- **Nouvelle Commande** : `/arcadialobby edit <nom> [description|item|location]` pour modifier les warps existants.
-- **Nouvelle Commande** : `/arcadialobby tp <nom>` pour se téléporter directement à un warp sans passer par le menu.
-- **Optimisation** : Passage de `LobbyManager` à `CopyOnWriteArrayList` pour une meilleure sécurité des threads et performances.
-
-#### Changé
-- **Déplacé** : `/setlobbytp` devient `/arcadialobby setlobbytp`.
-- **Déplacé** : `/dellobbytp` devient `/arcadialobby dellobbytp`.
-
-#### Corrigé
-- **Stabilité** : Amélioration de la gestion des erreurs pour empêcher la corruption des données.
-
-______________________________________________________________________
 
 ## [1.4.0] - 2026-01-23
 
-### 🇺🇸 English
-#### Added
-- **RTP Command**: New `/arcadiartp` command allowing random teleportation TO the Overworld (from anywhere).
-- **RTP Config**:
-    - `rtpRadius`: Configurable max radius (default 50,000 blocks).
-    - `rtpMaxUsage`: Configurable use limit per player (default 1).
-- **RTP Fallback**: If limit is reached, command teleports player to their last valid RTP destination.
-- **Persistence**: Player RTP usage and locations are saved securely using NeoForge Data Attachments.
+### Added
+- **RTP Command** — `/arcadiartp` with configurable radius and usage limit.
+- **Persistence** — RTP data via NeoForge Data Attachments.
+
+### Ajouts
+- **Commande RTP** — `/arcadiartp` avec rayon et limite configurables.
+- **Persistance** — Donnees RTP via NeoForge Data Attachments.
 
 ---
-
-### 🇫🇷 Français
-#### Ajouté
-- **Commande RTP** : Nouvelle commande `/arcadiartp` permettant la téléportation aléatoire VERS l'Overworld (depuis n'importe où).
-- **Config RTP** :
-    - `rtpRadius` : Rayon max configurable (défaut 50 000 blocs).
-    - `rtpMaxUsage` : Limite d'utilisation par joueur configurable (défaut 1).
-- **RTP Fallback** : Si la limite est atteinte, la commande téléporte le joueur à sa dernière destination RTP valide.
-- **Persistance** : L'utilisation et les lieux RTP des joueurs sont sauvegardés via NeoForge Data Attachments.
-
-______________________________________________________________________
 
 ## [1.3.0] - 2026-01-16
 
-### 🇺🇸 English
-#### Added
-- **Full Configuration System**: New `config.toml` to control all dimension aspects.
-- **World Generation Config**:
-    - **Biome**: Customizable default biome (e.g., `minecraft:the_void`).
-    - **Layers**: Customizable flat world layers.
-- **Environment Config**:
-    - **Time**: Lock time or allow cycle.
-    - **Weather**: Toggle rain/thunder.
-- **Mob Spawning**: Fine-grained control per category (Monsters, Creatures, etc.).
-- **Safety Options**: Piglin zombification, bed explosions, respawn anchors, and raids toggles.
+### Added
+- **Full Configuration** — `config.toml` for all dimension properties.
+- **Mob Spawning Control** — Per-category mob spawn toggles.
 
-#### Changed
-- **Dimension Generation**: Now fully dynamic based on configuration. Static JSON files have been removed.
-- **Mob Spawning**: Switched to **strict blocking** for safety. If disabled, blocks EVERYTHING (Natural/Spawner/Egg).
-
-#### Fixed
-- **Terrain Generation**: Fixed "void world" bug by using clean Reflection for instantiation.
-- **Compilation**: Stabilized for NeoForge 1.21.1.
+### Ajouts
+- **Configuration Complete** — `config.toml` pour toutes les proprietes de dimension.
+- **Controle des Mobs** — Toggles de spawn par categorie.
 
 ---
-
-### 🇫🇷 Français
-#### Ajouté
-- **Système de Configuration Complet** : Nouveau `config.toml` pour contrôler tous les aspects de la dimension.
-- **Config Génération Monde** :
-    - **Biome** : Biome par défaut personnalisable (ex : `minecraft:the_void`).
-    - **Couches** : Couches du monde plat personnalisables.
-- **Config Environnement** :
-    - **Temps** : Bloquer le temps ou laisser le cycle.
-    - **Météo** : Activer/Désactiver pluie/orage.
-- **Apparition des Mobs** : Contrôle fin par catégorie (Monstres, Créatures, etc.).
-- **Options de Sécurité** : Zombification des Piglins, explosions de lits, ancres de réapparition et raids désactivables.
-
-#### Changé
-- **Génération de Dimension** : Désormais entièrement dynamique basée sur la configuration. Les fichiers JSON statiques ont été supprimés.
-- **Spawn des Mobs** : Passage à un **blocage strict** pour garantir la sécurité. Si désactivé, bloque tout (Naturel/Spawner/Oeuf).
-
-#### Corrigé
-- **Génération Terrain** : Correction du bug de "monde vide" (Void) en utilisant une instanciation propre via Réflexion.
-- **Compilation** : Stabilisation pour NeoForge 1.21.1.
-
-______________________________________________________________________
 
 ## [1.2.0] - 2026-01-14
 
-### 🇺🇸 English
-#### Added
-- **Localization Support**: Native support for English (en_us) and French (fr_fr). The mod now automatically adapts to the client's language.
-- **Custom Icons**: You can now define a specific item for each lobby warp point using `/setlobbytp <name> [item] [description]`.
-    - Example: `/setlobbytp pvp minecraft:diamond_sword` will display a Diamond Sword in the menu.
+### Added
+- **Localization** — English + French auto-detection.
+- **Custom Icons** — Item icons for lobby warps.
 
-#### Changed
-- **Lobby Menu**: Now utilizes translatable components, ensuring correct text display for all users.
-- **Config**: The `LobbyLocation` JSON structure now includes an optional `item` field.
-
-#### Fixed
-- **Typo**: Corrected "ArcadiA" to "Lobby Arcadia" in the menu title.
+### Ajouts
+- **Localisation** — Anglais + Francais avec detection automatique.
+- **Icones Personnalisees** — Items pour les warps lobby.
 
 ---
 
-### 🇫🇷 Français
-#### Ajouté
-- **Système de Langue** : Support natif du Français (fr_fr) et de l'Anglais (en_us). Le mod s'adapte automatiquement à la langue du client.
-- **Icônes Personnalisées** : Possibilité de définir un item spécifique pour chaque point de warp via `/setlobbytp <name> [item] [description]`.
-    - Exemple : `/setlobbytp pvp minecraft:diamond_sword` affichera une Épée en Diamant dans le menu.
-
-#### Changé
-- **Menu Lobby** : Utilise maintenant des composants traduisibles pour un affichage correct du texte.
-- **Config** : La structure JSON de `LobbyLocation` inclut désormais un champ optionnel `item`.
-
-#### Corrigé
-- **Coquille** : Correction de "ArcadiA" en "Lobby Arcadia" dans le titre du menu.
-
-______________________________________________________________________
-
 ## [1.1.0] - 2026-01-12
 
-### 🇺🇸 English
-#### Added
-- **Dynamic Lobby Menu**: New GUI accessible via `/lobby` displaying configurable teleport points.
-- **Commands**:
-    - `/setlobbytp <name> [description]`: Define a new warp point at your location.
-    - `/dellobbytp <name>`: Remove an existing warp point.
-    - `/arcadialobby reload`: Reload configuration without restarting the server.
-- **Configuration**: Teleport points are now stored in JSON files located at `config/arcadia/arcadialobbyspawn/`.
+### Added
+- **Lobby Menu** — Dynamic GUI via `/lobby`.
+- **Commands** — `/setlobbytp`, `/dellobbytp`, reload.
 
-### 🇫🇷 Français
-#### Ajouté
-- **Menu Lobby Dynamique** : Nouvelle interface accessible via `/lobby` affichant des points de téléportation configurables.
-- **Commandes** :
-    - `/setlobbytp <nom> [description]` : Définit un nouveau point de warp à votre position.
-    - `/dellobbytp <nom>` : Supprime un point de warp existant.
-    - `/arcadialobby reload` : Recharge la configuration sans redémarrer le serveur.
-- **Configuration** : Les points de téléportation sont maintenant stockés dans des fichiers JSON situés dans `config/arcadia/arcadialobbyspawn/`.
+### Ajouts
+- **Menu Lobby** — Interface dynamique via `/lobby`.
+- **Commandes** — `/setlobbytp`, `/dellobbytp`, reload.
 
-______________________________________________________________________
+---
 
 ## [1.0.0] - Initial Release
 
-### 🇺🇸 English
-- **Spawn System**: Basic `/spawn` command to teleport players to a predefined global spawn point.
-- **Safety**: Prevents fall damage upon teleportation.
+### Added
+- **Spawn System** — `/spawn` command with fall damage prevention.
 
-### 🇫🇷 Français
-- **Système de Spawn** : Commande de base `/spawn` pour téléporter les joueurs vers un point de spawn global prédéfini.
-- **Sécurité** : Empêche les dégâts de chute lors de la téléportation.
+### Ajouts
+- **Systeme de Spawn** — Commande `/spawn` avec prevention des degats de chute.

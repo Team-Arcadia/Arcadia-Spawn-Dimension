@@ -1,18 +1,30 @@
 {
-    "arcadiaspawn.menu.title": "Arcadia Lobby",
-    "arcadiaspawn.command.setlobby.success": "Lobby point '%s' saved successfully!",
-    "arcadiaspawn.command.dellobby.success": "Lobby point '%s' deleted successfully.",
-    "arcadiaspawn.command.dellobby.fail": "Lobby point '%s' not found in this dimension.",
-    "arcadiaspawn.command.reload.success": "Lobby configuration reloaded successfully!",
-    "arcadiaspawn.command.spawn.fail_dim": "The dimension 'arcadia:spawn' is missing!",
-    "arcadiaspawn.command.spawn.fail_unset": "Spawn is not set. Use /setlobbyspawn first.",
-    "arcadiaspawn.command.setspawn.success": "Arcadia Spawn set here.",
-    "arcadiaspawn.teleport.success": "Teleporting to %s...",
-    "arcadiaspawn.teleport.fail": "Error: Dimension not found.",
-    "arcadiaspawn.command.rtp.fail_dim": "You must be in the Overworld to use RTP!",
-    "arcadiaspawn.command.rtp.limit_reached": "RTP limit reached! Teleporting to your last RTP position...",
-    "arcadiaspawn.command.rtp.no_last_pos": "Limit reached, but no previous position found!",
-    "arcadiaspawn.command.rtp.success": "RTP successful to %s, %s, %s!",
-    "arcadiaspawn.command.rtp.fail_safe": "Could not find a safe position after multiple attempts.",
-    "arcadiaspawn.slotbypass.kick": "The server is full! Only VIP players can join right now."
+    "arcadia_spawn.menu.title": "Arcadia Lobby",
+
+    "arcadia_spawn.hub.title": "Spawn",
+    "arcadia_spawn.hub.subtitle": "Lobby & Teleport",
+
+    "arcadia_spawn.command.setlobby.success": "Lobby point '%s' saved successfully!",
+    "arcadia_spawn.command.dellobby.success": "Lobby point '%s' deleted successfully.",
+    "arcadia_spawn.command.dellobby.fail": "Lobby point '%s' not found.",
+    "arcadia_spawn.command.edit.success": "Lobby '%s' updated successfully.",
+    "arcadia_spawn.command.reload.success": "Lobby configuration reloaded successfully!",
+
+    "arcadia_spawn.command.spawn.fail_dim": "The dimension 'arcadia:spawn' is missing!",
+    "arcadia_spawn.command.spawn.fail_unset": "Spawn is not set. Use /arcadia_spawn setspawn or /setlobbyspawn first.",
+    "arcadia_spawn.command.setspawn.success": "Arcadia Spawn set at your current position.",
+
+    "arcadia_spawn.teleport.success": "Teleporting to %s...",
+    "arcadia_spawn.teleport.fail": "Error: Target dimension not found.",
+
+    "arcadia_spawn.command.rtp.fail_dim": "You must be in the Overworld to use RTP!",
+    "arcadia_spawn.command.rtp.limit_reached": "RTP limit reached! Teleporting to your last RTP position...",
+    "arcadia_spawn.command.rtp.no_last_pos": "Limit reached, but no previous position found!",
+    "arcadia_spawn.command.rtp.success": "RTP successful to %s, %s, %s!",
+    "arcadia_spawn.command.rtp.fail_safe": "Could not find a safe position after multiple attempts.",
+
+    "arcadia_spawn.slotbypass.kick": "The server is full! Only VIP players can join right now.",
+
+    "key.arcadia_spawn.open_lobby": "Open Lobby Menu",
+    "key.categories.arcadia_spawn": "Arcadia Spawn"
 }

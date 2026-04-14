@@ -11,11 +11,9 @@ displayURL="https://github.com/vyrriox/Spawn-dimension"
 logoFile="logo.png"
 authors="${mod_authors}"
 description="${mod_description}"
-# This is crucial for server-side only mods
-displayTest="IGNORE_SERVER_VERSION"
 
 [[mixins]]
-config="arcadiaspawn.mixins.json"
+config="arcadia_spawn.mixins.json"
 
 [[dependencies.${mod_id}]]
 modId="neoforge"
@@ -29,4 +27,11 @@ modId="minecraft"
 type="required"
 versionRange="${minecraft_version_range}"
 ordering="NONE"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="arcadia_lib"
+type="required"
+versionRange="[1.2.0,)"
+ordering="AFTER"
 side="BOTH"

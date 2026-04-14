@@ -1,116 +1,147 @@
 # Arcadia Spawn
 
-![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red) ![Version](https://img.shields.io/badge/version-1.4.3-blue)
+![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red) ![Version](https://img.shields.io/badge/version-1.5.0-blue) ![Side](https://img.shields.io/badge/side-BOTH-green) ![MC](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen)
 
-**[EN]** Advanced spawn management and dynamic lobby menu for the Arcadia server.
-**[FR]** Gestion avancée du spawn et menu lobby dynamique pour le serveur Arcadia.
+Advanced spawn dimension management, dynamic lobby menu, and RTP system for the Arcadia ecosystem.
 
----
+## Features
 
-## 🇺🇸 English (US)
+- **Arcadia Hub Integration** — Registered as first card in the Arcadia Hub (via arcadia-lib).
+- **Dynamic Lobby Menu** — GUI accessible via `/lobby` with configurable teleport points, custom icons, and descriptions.
+- **Spawn Dimension** — Fully configurable custom dimension (biome, layers, time, weather, mob spawning).
+- **Random Teleport (RTP)** — `/arcadiartp` with configurable radius, usage limits, warmup, and cooldown.
+- **Teleport Warmup & Cooldown** — All teleports use arcadia-lib's TeleportManager with movement cancellation.
+- **Slot Bypass** — Permission-based server slot limiting with fake max display and join/leave message hiding.
+- **Debug Suite** — 13 debug subcommands for full server diagnostics.
+- **Bilingual** — Full English and French support (auto-detected from client).
 
-### Configuration (v1.3.0+)
-The dimension is fully configurable via `config/arcadia/arcadialobbyspawn/config.toml`.
-- **World**: Biome, Layers, Time Locking, Weather.
-- **Rules**: Mob Spawning, Player Safety (Piglins, Beds, Raids).
+## Requirements
 
-> [!CAUTION]
-> **Important - Mob Spawning (v1.3.0+)**
-> If you set `spawn_monsters = false`, **ALL** monsters will be blocked (including Spawners, Eggs, Commands).
-> To allow Spawners but block natural spawns:
-> 1. Set `spawn_monsters = true` in config.
-> 2. Ensure `biome` is set to `"minecraft:the_void"` (default) which naturally prevents mob spawning.
+- Minecraft 1.21.1
+- NeoForge 21.1.219+
+- [arcadia-lib](https://github.com/vyrriox) 1.2.0+
 
-### Features
-- **Dynamic Lobby Menu**: Access a GUI via `/lobby` to teleport to defined servers/dimensions.
-- **Custom Icons**: Use any Minecraft item as an icon for your warp points.
-- **Bilingual**: Fully translated in English and French.
-- **Spawn Management**: Secure spawn system preventing void falls.
+## Commands
 
-### Commands
-- `/lobby`: Opens the lobby menu.
-- `/spawn`: Teleports to the defined global spawn.
-- `/arcadialobby setlobbytp <name> [item] [description]` *(Admin)*: Sets a warp point at your location.
-    - `item`: (Optional) The item ID to show (e.g., `minecraft:diamond`). Defaults to paper.
-    - `description`: (Optional) Text shown in the tooltip.
-- `/arcadialobby dellobbytp <name>` *(Admin)*: Removes a warp point.
-- `/arcadialobby edit <name> [description|item|location]` *(Admin)*: Modify an existing warp.
-- `/arcadialobby tp <name>` *(Admin)*: Teleport directly to a warp.
-- `/setlobbyspawn` *(Admin)*: Sets the global spawn point.
-- `/arcadialobby reload` *(Admin)*: Reloads configuration from disk.
-- `/arcadiartp`: Random teleport in Overworld (Configurable limit & radius).
+### Player Commands
+| Command | Description |
+|---------|-------------|
+| `/lobby` | Opens the lobby teleport menu |
+| `/spawn` | Teleport to the spawn dimension |
+| `/arcadiartp` | Random teleport in Overworld |
 
-### Slot Bypass System
-Allows specific permission holders to join even when the server is full.
-- **Config file**: `config/arcadia/arcadialobbyspawn/slot_bypass.toml`
-  - `enabled`: Enable/disable the system.
-  - `max_slots`: Maximum player count before bypass is required.
-  - `kick_message`: Custom kick message (supports `&` color codes).
-- **Permission node**: `arcadia_spawn.slots.bypass`
-  - Assign this permission in **LuckPerms** to any group or player.
-  - Uses NeoForge PermissionAPI (native LuckPerms compatibility).
+### Admin Commands (`/arcadia_spawn`, requires op 2)
+| Command | Description |
+|---------|-------------|
+| `reload` | Reload lobby configuration |
+| `setlobbytp <name> [item] [desc]` | Create warp point |
+| `dellobbytp <name>` | Delete warp point |
+| `edit <name> description/item/location` | Modify warp point |
+| `tp <name>` | Teleport to warp point |
+| `setspawn` | Set spawn at current position |
+| `/setlobbyspawn` | Alias for setspawn |
 
-### Tweaks (Fake Slots & Chat Messages)
-The mod provides tweaks configurable via `config/arcadia/arcadialobbyspawn/slot_bypass.toml`.
-- `fake_max_slots_enabled`: When enabled, the server list will display the `max_slots` value as the maximum capacity rather than the real server capacity, helping to prevent connection spam when players think there's room.
-- `hide_join_leave_messages`: When enabled, hides the default vanilla "Player joined the game" and "Player left the game" chat messages.
+### Debug Commands (`/arcadia_spawn debug`)
+| Command | Description |
+|---------|-------------|
+| `status` | Full mod status overview |
+| `spawn` | Spawn dimension details |
+| `dimension` | Dimension config dump |
+| `lobbies` | List all lobby locations |
+| `rtp` | Player RTP data |
+| `rtp reset` | Reset RTP usage |
+| `config` | Dump all active config |
+| `slots` | Slot bypass status |
+| `player` | Player info (UUID, lang, pos) |
+| `reload_all` | Force reload lobbies + languages |
+| `reset_visited` | Remove first-join tag |
+| `tps` | Server TPS and tick timing |
+| `lang [key]` | Language info / test key |
 
----
+## Configuration
 
-## 🇫🇷 Français (FR)
+- **Spawn Config**: `config/arcadia/spawn/config.toml`
+- **Slot Bypass**: `config/arcadia/spawn/slot_bypass.toml`
+- **Lobby Data**: `config/arcadia/spawn/lobbies/*.json`
 
-### Configuration (v1.3.0+)
-La dimension est entièrement configurable via `config/arcadia/arcadialobbyspawn/config.toml`.
-- **Monde** : Biome, Couches, Blocage du temps, Météo.
-- **Règles** : Apparition des mobs, Sécurité du joueur (Piglins, Lits, Raids).
+### Permission Node
+- `arcadia_spawn.slots.bypass` — Bypass slot limit (LuckPerms compatible)
 
-> [!CAUTION]
-> **Important - Mob Spawning (v1.3.0+)**
-> Si vous réglez `spawn_monsters = false`, **TOUS** les montres seront bloqués (y compris via Spawner, Oeuf, Commande).
-> Pour autoriser les Spawners tout en bloquant le spawn naturel :
-> 1. Mettez `spawn_monsters = true` dans la config.
-> 2. Assurez-vous que `biome` est réglé sur `"minecraft:the_void"` (par défaut) qui empêche naturellement le spawn des mobs.
+## Credits
 
-### Fonctionnalités
-- **Menu Lobby Dynamique** : Accédez à un menu via `/lobby` pour vous téléporter vers différents points.
-- **Icônes Personnalisées** : Utilisez n'importe quel item Minecraft comme icône pour vos points de warp.
-- **Bilingue** : Entièrement traduit en Français et Anglais.
-- **Gestion du Spawn** : Système de spawn sécurisé évitant les chutes dans le vide.
-
-### Commandes
-- `/lobby` : Ouvre le menu lobby.
-- `/spawn` : Téléporte au spawn global défini.
-- `/arcadialobby setlobbytp <nom> [item] [description]` *(Admin)* : Crée un point de warp à votre position.
-    - `item` : (Optionnel) L'ID de l'item à afficher (ex: `minecraft:diamond`). Par défaut papier.
-    - `description` : (Optionnel) Texte affiché dans l'infobulle.
-- `/arcadialobby dellobbytp <nom>` *(Admin)* : Supprime un point de warp.
-- `/arcadialobby edit <nom> [description|item|location]` *(Admin)* : Modifie un warp existant.
-- `/arcadialobby tp <nom>` *(Admin)* : Se téléporter directement à un warp.
-- `/setlobbyspawn` *(Admin)* : Définit le point de spawn global.
-- `/arcadialobby reload` *(Admin)* : Recharge la configuration.
-- `/arcadiartp` : Téléportation aléatoire dans l'Overworld (Limite & rayon configurables).
-
-### Système de Bypass de Slots
-Permet à certains joueurs de se connecter même quand le serveur est plein.
-- **Fichier de config** : `config/arcadia/arcadialobbyspawn/slot_bypass.toml`
-  - `enabled` : Activer/désactiver le système.
-  - `max_slots` : Nombre max de joueurs avant activation du bypass.
-  - `kick_message` : Message de kick personnalisé (supporte les codes couleur `&`).
-- **Permission** : `arcadia_spawn.slots.bypass`
-  - Assignez cette permission dans **LuckPerms** à n'importe quel groupe ou joueur.
-  - Utilise le PermissionAPI NeoForge (compatibilité native avec LuckPerms).
-
-### Tweaks (Faux Slots & Messages Chat)
-Le mod fournit des ajustements configurables via `config/arcadia/arcadialobbyspawn/slot_bypass.toml`.
-- `fake_max_slots_enabled` : Si activé, la liste des serveurs affichera la valeur de `max_slots` comme capacité maximale plutôt que la vraie capacité du serveur, évitant que les joueurs spamment la connexion pensant qu'il reste de la place.
-- `hide_join_leave_messages` : Si activé, masque les messages Vanilla par défaut "Joueur a rejoint la partie" et "Joueur a quitté la partie" dans le tchat.
+Author: vyrriox
 
 ---
 
-### Author / Auteur
-**@author vyrriox**
+# Arcadia Spawn (Version Francaise)
+
+Gestion avancee de la dimension spawn, menu lobby dynamique et systeme RTP pour l'ecosysteme Arcadia.
+
+## Caracteristiques
+
+- **Integration Hub Arcadia** — Enregistre comme premiere carte dans le Hub Arcadia (via arcadia-lib).
+- **Menu Lobby Dynamique** — Interface accessible via `/lobby` avec points de teleportation configurables.
+- **Dimension Spawn** — Dimension personnalisee entierement configurable (biome, couches, temps, meteo, mobs).
+- **Teleportation Aleatoire (RTP)** — `/arcadiartp` avec rayon, limites, warmup et cooldown configurables.
+- **Warmup & Cooldown** — Toutes les teleportations utilisent le TeleportManager d'arcadia-lib avec annulation sur mouvement.
+- **Bypass de Slots** — Limitation de slots basee sur les permissions avec affichage de faux maximum.
+- **Suite Debug** — 13 sous-commandes de debug pour le diagnostic serveur complet.
+- **Bilingue** — Support complet anglais et francais (detection automatique).
+
+## Pre-requis
+
+- Minecraft 1.21.1
+- NeoForge 21.1.219+
+- [arcadia-lib](https://github.com/vyrriox) 1.2.0+
+
+## Commandes
+
+### Commandes Joueur
+| Commande | Description |
+|----------|-------------|
+| `/lobby` | Ouvre le menu de teleportation lobby |
+| `/spawn` | Teleportation vers la dimension spawn |
+| `/arcadiartp` | Teleportation aleatoire dans l'Overworld |
+
+### Commandes Admin (`/arcadia_spawn`, necessite op 2)
+| Commande | Description |
+|----------|-------------|
+| `reload` | Recharger la configuration lobby |
+| `setlobbytp <nom> [item] [desc]` | Creer un point de warp |
+| `dellobbytp <nom>` | Supprimer un point de warp |
+| `edit <nom> description/item/location` | Modifier un point de warp |
+| `tp <nom>` | Se teleporter a un point de warp |
+| `setspawn` | Definir le spawn a la position actuelle |
+
+### Commandes Debug (`/arcadia_spawn debug`)
+| Commande | Description |
+|----------|-------------|
+| `status` | Vue d'ensemble du mod |
+| `spawn` | Details de la dimension spawn |
+| `dimension` | Dump de la config dimension |
+| `lobbies` | Lister tous les lobbies |
+| `rtp` | Donnees RTP du joueur |
+| `rtp reset` | Reinitialiser le compteur RTP |
+| `config` | Dump de toute la config active |
+| `slots` | Statut du bypass de slots |
+| `player` | Info joueur (UUID, langue, pos) |
+| `reload_all` | Recharger lobbies + langues |
+| `reset_visited` | Supprimer le tag premier join |
+| `tps` | TPS serveur et timing des ticks |
+| `lang [cle]` | Info langue / tester une cle |
+
+## Configuration
+
+- **Config Spawn** : `config/arcadia/spawn/config.toml`
+- **Bypass Slots** : `config/arcadia/spawn/slot_bypass.toml`
+- **Donnees Lobby** : `config/arcadia/spawn/lobbies/*.json`
+
+## Credits
+
+Author: vyrriox
+
+---
 
 ### Links / Liens
 - **Website**: [Arcadia: Echoes Of Power](https://arcadia-echoes-of-power.fr/)
 - **Support**: [Discord](https://discord.gg/xjF8Rtzyd4)
-- **Donation**: [Stripe](https://buy.stripe.com/3cI3co6X97Vy4IK50QfIs00)

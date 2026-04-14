@@ -29,3 +29,7 @@ src_backup/
 *.log
 
 repo
+
+# Claude Code
+.claude/
+CLAUDE.md

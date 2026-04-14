@@ -1,18 +1,30 @@
 {
-    "arcadiaspawn.menu.title": "Lobby Arcadia",
-    "arcadiaspawn.command.setlobby.success": "Point lobby '%s' sauvegardé avec succès !",
-    "arcadiaspawn.command.dellobby.success": "Point lobby '%s' supprimé avec succès.",
-    "arcadiaspawn.command.dellobby.fail": "Point lobby '%s' introuvable dans cette dimension.",
-    "arcadiaspawn.command.reload.success": "Configuration lobby rechargée avec succès !",
-    "arcadiaspawn.command.spawn.fail_dim": "La dimension 'arcadia:spawn' est introuvable !",
-    "arcadiaspawn.command.spawn.fail_unset": "Le spawn n'est pas défini. Utilisez /setlobbyspawn d'abord.",
-    "arcadiaspawn.command.setspawn.success": "Spawn Arcadia défini ici.",
-    "arcadiaspawn.teleport.success": "Téléportation vers %s...",
-    "arcadiaspawn.teleport.fail": "Erreur : Dimension introuvable.",
-    "arcadiaspawn.command.rtp.fail_dim": "Vous devez être dans l'Overworld pour utiliser le RTP !",
-    "arcadiaspawn.command.rtp.limit_reached": "Limite de RTP atteinte ! Téléportation à votre dernière position RTP...",
-    "arcadiaspawn.command.rtp.no_last_pos": "Limite atteinte, mais aucune position précédente trouvée !",
-    "arcadiaspawn.command.rtp.success": "RTP réussi en %s, %s, %s !",
-    "arcadiaspawn.command.rtp.fail_safe": "Impossible de trouver une position sûre après plusieurs essais.",
-    "arcadiaspawn.slotbypass.kick": "Le serveur est plein ! Seuls les joueurs VIP peuvent se connecter."
+    "arcadia_spawn.menu.title": "Lobby Arcadia",
+
+    "arcadia_spawn.hub.title": "Spawn",
+    "arcadia_spawn.hub.subtitle": "Lobby & Téléportation",
+
+    "arcadia_spawn.command.setlobby.success": "Point lobby '%s' sauvegardé avec succès !",
+    "arcadia_spawn.command.dellobby.success": "Point lobby '%s' supprimé avec succès.",
+    "arcadia_spawn.command.dellobby.fail": "Point lobby '%s' introuvable.",
+    "arcadia_spawn.command.edit.success": "Lobby '%s' mis à jour avec succès.",
+    "arcadia_spawn.command.reload.success": "Configuration lobby rechargée avec succès !",
+
+    "arcadia_spawn.command.spawn.fail_dim": "La dimension 'arcadia:spawn' est introuvable !",
+    "arcadia_spawn.command.spawn.fail_unset": "Le spawn n'est pas défini. Utilisez /arcadia_spawn setspawn ou /setlobbyspawn.",
+    "arcadia_spawn.command.setspawn.success": "Spawn Arcadia défini à votre position actuelle.",
+
+    "arcadia_spawn.teleport.success": "Téléportation vers %s...",
+    "arcadia_spawn.teleport.fail": "Erreur : Dimension cible introuvable.",
+
+    "arcadia_spawn.command.rtp.fail_dim": "Vous devez être dans l'Overworld pour utiliser le RTP !",
+    "arcadia_spawn.command.rtp.limit_reached": "Limite de RTP atteinte ! Téléportation à votre dernière position RTP...",
+    "arcadia_spawn.command.rtp.no_last_pos": "Limite atteinte, mais aucune position précédente trouvée !",
+    "arcadia_spawn.command.rtp.success": "RTP réussi en %s, %s, %s !",
+    "arcadia_spawn.command.rtp.fail_safe": "Impossible de trouver une position sûre après plusieurs essais.",
+
+    "arcadia_spawn.slotbypass.kick": "Le serveur est plein ! Seuls les joueurs VIP peuvent se connecter.",
+
+    "key.arcadia_spawn.open_lobby": "Ouvrir le menu Lobby",
+    "key.categories.arcadia_spawn": "Arcadia Spawn"
 }
