@@ -6,12 +6,15 @@ import com.arcadia.spawn.config.SlotBypassConfig;
 import com.arcadia.spawn.config.SpawnConfig;
 import com.arcadia.spawn.lobby.LobbyManager;
 import com.arcadia.spawn.lobby.LocalizationManager;
+import com.arcadia.spawn.network.C2SOpenLobby;
+import com.arcadia.spawn.network.SpawnNetworking;
 import com.arcadia.spawn.registry.AttachmentRegistry;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
@@ -28,6 +31,7 @@ public class ArcadiaSpawnMod {
                 SlotBypassConfig.SPEC, "arcadia/spawn/slot_bypass.toml");
 
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(SpawnNetworking::onRegisterPayloads);
 
         AttachmentRegistry.register(modEventBus);
     }
@@ -48,17 +52,10 @@ public class ArcadiaSpawnMod {
                     true
             ));
 
-            // Unique tab index (high value to avoid conflicts with other mods)
-            final int SPAWN_TAB_INDEX = 100;
-
-            // Register tab opener at unique index
-            ArcadiaModRegistry.registerTabOpener(SPAWN_TAB_INDEX, player -> {
-                com.arcadia.spawn.commands.SpawnCommands.openLobbyForPlayer(player);
-            });
-
-            // Card click handler sends to our unique tab index (not sortOrder)
+            // Card click handler: send our own C2S packet to open lobby menu
+            // This bypasses prestige's dashboard entirely
             ArcadiaModRegistry.registerCardClickHandler("spawn", () -> {
-                ArcadiaModRegistry.openTabClient(SPAWN_TAB_INDEX);
+                PacketDistributor.sendToServer(new C2SOpenLobby());
             });
 
             LOGGER.info("Arcadia Spawn initialized — hub card registered at position 1.");
