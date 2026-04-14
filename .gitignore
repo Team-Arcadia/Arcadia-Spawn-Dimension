@@ -1,35 +1,50 @@
-# eclipse
-bin
-*.launch
-.settings
-.metadata
-.classpath
-.project
+# ── Build output ─────────────────────────────────────────
+.gradle/
+build/
+bin/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
 
-# idea
-out
+# ── IDE ──────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
 *.ipr
 *.iws
-*.iml
-.idea
+*.code-workspace
+.classpath
+.project
+.settings/
 
-# gradle
-build
-.gradle
-
-# vs code
-.vscode/
-
-# other
-eclipse
-run
-runs
-run-data
-src_backup/
+# ── Java ─────────────────────────────────────────────────
+*.class
 *.log
+*.ctxt
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
 
-repo
+# ── Minecraft / NeoForge ────────────────────────────────
+run/
+run_server/
+run_client/
+logs/
+crash-reports/
+debug/
+src/generated/
 
-# Claude Code
+# ── OS ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Claude Code (local only) ────────────────────────────
 .claude/
 CLAUDE.md
+
+# ── Local dependencies (tracked — required for CI build) ─
+# libs/ is committed so GitHub Actions can compile against arcadia-lib
+
+# ── Release artifacts ───────────────────────────────────
+RELEASE_NOTES.md

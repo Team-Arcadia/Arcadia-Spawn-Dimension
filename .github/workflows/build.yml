@@ -1,31 +1,45 @@
-name: Build
+name: Build & Test
 
-on: [push, pull_request]
+on:
+  push:
+    tags: [ 'v*' ]
+    paths:
+      - 'src/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'libs/**'
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    name: Build Mod
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          fetch-tags: true
 
-      - name: Setup JDK 21
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: gradle
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Grant execute permission
+        run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build --no-daemon
 
-      - name: Upload Artifact
+      - name: Upload Build Artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Arcadia-Spawn-Dimension-JAR
-          path: build/libs/*.jar
+          name: Arcadia-Spawn-${{ github.ref_name }}
+          path: build/libs/arcadia_spawn-*.jar
+          retention-days: 30
