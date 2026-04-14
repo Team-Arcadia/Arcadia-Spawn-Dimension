@@ -48,13 +48,9 @@ public class ArcadiaSpawnMod {
                     true
             ));
 
-            // Register card click handler to open lobby menu via server action
-            ArcadiaModRegistry.registerCardClickHandler("spawn", () -> {
-                ArcadiaModRegistry.executeClientAction("arcadia_spawn:open_lobby");
-            });
-
-            // Register server action for lobby open
-            ArcadiaModRegistry.registerServerAction("arcadia_spawn:open_lobby", player -> {
+            // Register tab opener — when hub card (sortOrder=1) is clicked,
+            // the hub sends a packet to server which calls this opener
+            ArcadiaModRegistry.registerTabOpener(1, player -> {
                 com.arcadia.spawn.commands.SpawnCommands.openLobbyForPlayer(player);
             });
 
