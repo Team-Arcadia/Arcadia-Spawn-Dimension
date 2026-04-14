@@ -1,35 +1,37 @@
 modLoader="javafml"
-loaderVersion="${loader_version_range}"
-license="${mod_license}"
-issueTrackerURL="https://github.com/vyrriox/Spawn-dimension/issues"
+loaderVersion="[4,)"
+license="All rights reserved"
+issueTrackerURL=""
 
 [[mods]]
-modId="${mod_id}"
-version="${mod_version}"
-displayName="${mod_name}"
-displayURL="https://github.com/vyrriox/Spawn-dimension"
-logoFile="logo.png"
-authors="${mod_authors}"
-description="${mod_description}"
+modId="arcadia_spawn"
+version="1.5.0"
+displayName="Arcadia Spawn"
+authors="vyrriox, Team Arcadia"
+description='''
+Arcadia Spawn - Complete Spawn Dimension Management
+Dynamic lobby menu, RTP, warmup/cooldown, LuckPerms meta overrides
+Developed by Team Arcadia
+'''
 
 [[mixins]]
 config="arcadia_spawn.mixins.json"
 
-[[dependencies.${mod_id}]]
+[[dependencies.arcadia_spawn]]
 modId="neoforge"
 type="required"
-versionRange="${neo_version_range}"
+versionRange="[21.1,)"
 ordering="NONE"
 side="BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.arcadia_spawn]]
 modId="minecraft"
 type="required"
-versionRange="${minecraft_version_range}"
+versionRange="[1.21,1.22)"
 ordering="NONE"
 side="BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.arcadia_spawn]]
 modId="arcadia_lib"
 type="required"
 versionRange="[1.2.0,)"

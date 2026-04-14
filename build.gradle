@@ -1,82 +1,74 @@
 plugins {
     id 'java-library'
+    id 'eclipse'
+    id 'idea'
     id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.140'
 }
 
-version = mod_version
-group = mod_group_id
+tasks.named('wrapper', Wrapper).configure {
+    gradleVersion = '8.7'
+}
+
+version = '1.5.0'
+group = 'com.arcadia.spawn'
+
+repositories {
+    mavenLocal()
+    flatDir { dirs 'libs' }
+}
 
 base {
-    archivesName = mod_id
+    archivesName = 'arcadia_spawn'
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 neoForge {
-    version = project.neo_version
-    parchment { mappingsVersion = '2024.11.17'; minecraftVersion = '1.21.1' }
+    version = '21.1.219'
+
+    parchment {
+        mappingsVersion = '2024.11.17'
+        minecraftVersion = '1.21.1'
+    }
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.base.archivesName.get()
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.base.archivesName.get()
+        }
+
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.base.archivesName.get()
+        }
+
+        data {
+            data()
+            programArguments.addAll '--mod', project.base.archivesName.get(), '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+    }
 
     mods {
-        "arcadia_spawn" {
-            sourceSet(sourceSets.main)
+        arcadia_spawn {
+            sourceSet sourceSets.main
         }
     }
 }
 
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
 dependencies {
-    compileOnly files('libs/arcadia-lib-1.2.0.jar')
+    implementation files("libs/arcadia-lib-1.2.0.jar")
     compileOnly "net.luckperms:api:5.4"
-}
-
-repositories {
-    maven { url = 'https://repo.maven.apache.org/maven2' }
-}
-
-// Expand properties into mods.toml
-tasks.withType(ProcessResources).configureEach {
-    var replaceProperties = [
-            minecraft_version      : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            neo_version_range      : neo_version_range,
-            loader_version_range   : loader_version_range,
-            mod_id                 : mod_id,
-            mod_name               : mod_name,
-            mod_license            : mod_license,
-            mod_version            : mod_version,
-            mod_authors            : mod_authors,
-            mod_description        : mod_description,
-    ]
-    inputs.properties replaceProperties
-
-    filesMatching(['META-INF/neoforge.mods.toml']) {
-        expand replaceProperties
-    }
-}
-
-jar {
-    manifest {
-        attributes(
-            'Implementation-Version': project.version,
-            'MixinConfigs': 'arcadia_spawn.mixins.json'
-        )
-    }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-}
-
-publishing {
-    publications {
-        register('mavenJava', MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            url "file://${project.projectDir}/repo"
-        }
-    }
 }
