@@ -41,15 +41,16 @@ public class ArcadiaSpawnMod {
             LobbyManager.init();
             LocalizationManager.init();
 
-            // Register hub card — row 0, sortOrder 0 = first card top row
+            // Register hub card — row 0, sortOrder 0, tabIndex -1 (custom click handler)
             ArcadiaModRegistry.registerCard(new ArcadiaModCard(
                     "spawn",
                     "\uD83C\uDFE0",
                     "arcadia_spawn.hub.title",
                     "arcadia_spawn.hub.subtitle",
                     0x55AA55,
-                    0,
-                    0,
+                    0,      // sortOrder = first in row
+                    0,      // row = top row
+                    -1,     // tabIndex = -1 (uses cardClickHandler, not dashboard tab)
                     true
             ));
 
