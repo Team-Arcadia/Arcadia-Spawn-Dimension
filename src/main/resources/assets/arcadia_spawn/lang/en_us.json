@@ -30,5 +30,7 @@
     "arcadia_spawn.slotbypass.kick": "The server is full! Only VIP players can join right now.",
 
     "key.arcadia_spawn.open_lobby": "Open Lobby Menu",
-    "key.categories.arcadia_spawn": "Arcadia Spawn"
+    "key.categories.arcadia_spawn": "Arcadia Spawn",
+
+    "arcadia_spawn.lobby.click_tp": "Click to teleport"
 }

@@ -75,11 +75,11 @@ public class LobbyMenu extends AbstractContainerMenu {
                     icon.set(DataComponents.LORE, new ItemLore(
                             List.of(Component.literal(loc.description()).withStyle(ChatFormatting.GRAY),
                                     Component.literal("").withStyle(ChatFormatting.DARK_GRAY),
-                                    Component.literal("Click to teleport | Cliquez pour vous tp")
+                                    Component.translatable("arcadia_spawn.lobby.click_tp")
                                             .withStyle(ChatFormatting.YELLOW))));
                 } else {
                     icon.set(DataComponents.LORE, new ItemLore(
-                            List.of(Component.literal("Click to teleport | Cliquez pour vous tp")
+                            List.of(Component.translatable("arcadia_spawn.lobby.click_tp")
                                     .withStyle(ChatFormatting.YELLOW))));
                 }
 
