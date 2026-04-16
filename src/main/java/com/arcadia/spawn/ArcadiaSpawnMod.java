@@ -9,6 +9,7 @@ import com.arcadia.spawn.lobby.LocalizationManager;
 import com.arcadia.spawn.network.C2SOpenLobby;
 import com.arcadia.spawn.network.SpawnNetworking;
 import com.arcadia.spawn.registry.AttachmentRegistry;
+import com.arcadia.spawn.registry.SpawnModMenus;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -34,6 +35,7 @@ public class ArcadiaSpawnMod {
         modEventBus.addListener(SpawnNetworking::onRegisterPayloads);
 
         AttachmentRegistry.register(modEventBus);
+        SpawnModMenus.MENUS.register(modEventBus);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
