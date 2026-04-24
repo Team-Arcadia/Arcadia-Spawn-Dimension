@@ -30,16 +30,12 @@ public class RTPCommand {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) return 0;
 
-        // Force Overworld
+        // Destination is always the Overworld (RTP explores the Overworld radius),
+        // but the command itself is callable from ANY dimension — including
+        // arcadia:spawn where players land on first join and expect to hop out
+        // via RTP. The previous overworld-only gate broke that flow.
         ServerLevel overworld = player.getServer().getLevel(Level.OVERWORLD);
         if (overworld == null) return 0;
-
-        // Check dimension
-        if (!player.level().dimension().equals(Level.OVERWORLD)) {
-            player.sendSystemMessage(ArcadiaMessages.error(
-                    LocalizationManager.getString(player, "arcadia_spawn.command.rtp.fail_dim")));
-            return 0;
-        }
 
         RTPData data = player.getData(AttachmentRegistry.RTP_DATA);
         int maxUsage = SpawnConfig.COMMON.rtpMaxUsage.get();

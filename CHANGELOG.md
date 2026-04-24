@@ -4,7 +4,19 @@ All notable changes to Arcadia Spawn are documented here.
 
 ---
 
-## [1.5.1] - 2026-04-23 (latest)
+## [1.5.2] - 2026-04-23 (latest)
+
+### Fixed
+
+- **`/arcadiartp` callable from any dimension** — The command refused with `rtp.fail_dim` unless the player was already standing in the Overworld. That defeated the whole design point: players who land in `arcadia:spawn` on first join are supposed to hop out into the Overworld via RTP. Removed the overworld-only gate — the destination is still the Overworld (that's where RTP explores), but the command is now invokable from any dimension (arcadia:spawn, Nether, End, anywhere).
+
+### Correctifs
+
+- **`/arcadiartp` utilisable depuis n'importe quelle dimension** — La commande refusait avec `rtp.fail_dim` sauf si le joueur se trouvait déjà dans l'Overworld. Ça cassait tout le design d'origine : les joueurs qui arrivent dans `arcadia:spawn` au premier login sont censés rejoindre l'Overworld via RTP. Suppression du garde overworld-only — la destination reste l'Overworld (là où RTP explore), mais la commande est maintenant invocable depuis n'importe quelle dimension (arcadia:spawn, Nether, End, peu importe).
+
+---
+
+## [1.5.1] - 2026-04-23
 
 ### Fixed
 

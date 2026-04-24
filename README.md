@@ -95,7 +95,7 @@ Arcadia Spawn is a feature-rich spawn dimension manager designed for the Arcadia
 ### Steps
 1. Download the latest release from the [Releases](https://github.com/Team-Arcadia/Arcadia-Spawn-Dimension/releases) page
 2. Place `arcadia-lib-1.2.0.jar` in your `mods/` folder
-3. Place `arcadia_spawn-1.5.1.jar` in your `mods/` folder
+3. Place `arcadia_spawn-1.5.2.jar` in your `mods/` folder
 4. Start the server
 
 ### Client Installation
@@ -295,7 +295,7 @@ Arcadia Spawn est un gestionnaire de dimension spawn complet concu pour l'ecosys
 ### Etapes
 1. Telecharger la derniere release depuis [Releases](https://github.com/Team-Arcadia/Arcadia-Spawn-Dimension/releases)
 2. Placer `arcadia-lib-1.2.0.jar` dans le dossier `mods/`
-3. Placer `arcadia_spawn-1.5.1.jar` dans le dossier `mods/`
+3. Placer `arcadia_spawn-1.5.2.jar` dans le dossier `mods/`
 4. Demarrer le serveur
 
 ## Meta LuckPerms
