@@ -4,6 +4,18 @@ All notable changes to Arcadia Spawn are documented here.
 
 ---
 
+## [1.5.1] - 2026-04-23 (latest)
+
+### Fixed
+
+- **Invisible mobs in the Arcadia Spawn dimension** — `MobSpawnHandler` subscribed to `EntityJoinLevelEvent` on both sides without an `isClientSide()` guard. Combined with `SpawnConfig` being registered as `ModConfig.Type.COMMON` (local to each side, no server→client sync), a dedicated server whose config allowed a mob category would spawn the entity, but the remote client — reading its own default (false) config — would re-evaluate the event and cancel the entity add client-side. Result: the server kept the mob (AI, sounds, hitbox) while the client never added it to its `ClientLevel`, so players could hear mobs but not see them; flipping `spawn_*` to false on the server only hid them harder. Handler now short-circuits on `event.getLevel().isClientSide()` — the server's cancel already stops the add-entity packet from being sent, so the client has nothing to filter. Kept off `Dist` so the integrated server in singleplayer still runs the filter.
+
+### Correctifs
+
+- **Mobs invisibles dans la dimension Arcadia Spawn** — `MobSpawnHandler` s'abonnait à `EntityJoinLevelEvent` des deux côtés sans garde `isClientSide()`. Combiné à `SpawnConfig` enregistrée en `ModConfig.Type.COMMON` (locale à chaque côté, pas de sync serveur→client), un serveur dédié dont la config autorisait une catégorie de mob faisait spawn l'entité, mais le client distant — qui lit sa propre config locale par défaut (false) — réévaluait l'event et annulait l'ajout côté client. Résultat : le serveur gardait le mob (IA, sons, hitbox) alors que le client ne l'ajoutait jamais à son `ClientLevel` — les joueurs entendaient les mobs mais ne les voyaient pas ; passer `spawn_*` à false côté serveur ne faisait que les cacher plus fort. Le handler court-circuite désormais sur `event.getLevel().isClientSide()` — le cancel serveur empêche déjà l'envoi du packet d'ajout d'entité, le client n'a rien à filtrer. Pas de filtre `Dist` pour que le serveur intégré en solo lance le filtrage.
+
+---
+
 ## [1.5.0] - 2026-04-14
 
 ### Added
