@@ -43,6 +43,10 @@ public final class TabListManager {
         if (++tickCounter < interval) return;
         tickCounter = 0;
 
+        // Advance animation frames once per refresh tick — animations cycle through
+        // their frame lists at exactly this rate.
+        AnimationFrames.advance();
+
         // Cross-server: heartbeat + peer refresh on their own cadences
         if (TabListConfig.VALUES.crossServerEnabled.get()) {
             long now = System.currentTimeMillis();

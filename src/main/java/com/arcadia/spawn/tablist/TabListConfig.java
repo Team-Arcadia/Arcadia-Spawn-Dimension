@@ -38,6 +38,9 @@ public class TabListConfig {
         // Spectator hiding
         public final ModConfigSpec.ConfigValue<Boolean> hideSpectatorsFromTab;
 
+        // Ping icon hiding (client-side render hook)
+        public final ModConfigSpec.ConfigValue<Boolean> hidePingIcons;
+
         // Cross-server (via arcadia-lib DB)
         public final ModConfigSpec.ConfigValue<Boolean> crossServerEnabled;
         public final ModConfigSpec.ConfigValue<Integer> heartbeatIntervalSeconds;
@@ -67,9 +70,12 @@ public class TabListConfig {
                     "  %server%, %online%, %max%, %tps%, %mspt%, %uptime%,",
                     "  %player_name%, %player_ping%, %player_playtime%, %lp_group%, %lp_prefix%,",
                     "  %cross_total% (sum across all alive peers).",
+                    "Animations: use %anim_<name>% — built-ins: pulse, loading, rainbow,",
+                    "  title_color, scroll, bar, blink (override or add via [Animations] section).",
                     "Color codes: use '&' (e.g. '&6Welcome &fto &b%server%').")
                     .defineList("header_lines",
                             Arrays.asList(
+                                    "%anim_scroll%",
                                     "",
                                     "&b&lArcadia &8• &f%server%",
                                     "&7%online%&8/&7%max% online &8• &7TPS &a%tps% &8• &7Net &a%cross_total%",
@@ -88,15 +94,16 @@ public class TabListConfig {
                                     "",
                                     "&7Ping &a%player_ping%ms &8• &7Playtime &a%player_playtime%",
                                     "",
-                                    "&b&narcadia-echoes-of-power.fr",
-                                    ""
+                                    "&6● &b&narcadia-echoes-of-power.fr&r &6●",
+                                    "%anim_scroll%"
                             ),
                             entry -> entry instanceof String);
 
             refreshIntervalTicks = builder.comment(
                     "Header/footer refresh interval in ticks (20 = 1 second).",
-                    "Lower = smoother updates, higher = less overhead. Default 40 (2s).")
-                    .defineInRange("refresh_interval_ticks", 40, 5, 600);
+                    "Also drives animation frame rate — lower = smoother animations.",
+                    "Default 10 (0.5s) which is a good balance between smoothness and bandwidth.")
+                    .defineInRange("refresh_interval_ticks", 10, 5, 600);
 
             builder.pop();
 
@@ -115,6 +122,11 @@ public class TabListConfig {
                     "Hide players in vanilla Spectator gamemode from the tab list of normal players.",
                     "Spectators still see each other in the tab so co-moderation works.")
                     .define("hide_spectators_from_tab", true);
+
+            hidePingIcons = builder.comment(
+                    "Hide the latency/ping signal-bar icons next to each player name in the tab list.",
+                    "Client-side only — players without this mod installed will still see the icons.")
+                    .define("hide_ping_icons", true);
             builder.pop();
 
             builder.push("Cross-Server Sync");

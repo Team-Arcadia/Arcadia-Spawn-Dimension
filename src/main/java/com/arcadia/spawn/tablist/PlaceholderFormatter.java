@@ -53,9 +53,25 @@ public final class PlaceholderFormatter {
         return out;
     }
 
+    private static final java.util.regex.Pattern ANIM_PATTERN =
+            java.util.regex.Pattern.compile("%anim_([a-zA-Z0-9_]+)%");
+
     private static String expand(String line, ServerPlayer player, MinecraftServer server,
                                  String serverDisplayName, List<PeerSnapshot> peers) {
         String result = line;
+
+        // Animations first so subsequent replacements can apply on their output if needed.
+        java.util.regex.Matcher m = ANIM_PATTERN.matcher(result);
+        if (m.find()) {
+            StringBuilder sb = new StringBuilder();
+            m.reset();
+            while (m.find()) {
+                m.appendReplacement(sb,
+                        java.util.regex.Matcher.quoteReplacement(AnimationFrames.resolve(m.group(1))));
+            }
+            m.appendTail(sb);
+            result = sb.toString();
+        }
 
         result = result.replace("%server%", serverDisplayName);
         result = result.replace("%online%", String.valueOf(server.getPlayerList().getPlayerCount()));
