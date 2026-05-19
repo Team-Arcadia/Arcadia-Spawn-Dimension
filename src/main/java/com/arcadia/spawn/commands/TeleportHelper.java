@@ -91,6 +91,7 @@ public final class TeleportHelper {
     // ── Tick (call from server tick event) ───────────────────────────────────
 
     public static void tick() {
+        if (activeWarmups.isEmpty()) return;
         var it = activeWarmups.entrySet().iterator();
         while (it.hasNext()) {
             var entry = it.next();

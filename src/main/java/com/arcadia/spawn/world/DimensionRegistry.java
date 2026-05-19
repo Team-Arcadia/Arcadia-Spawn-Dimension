@@ -42,10 +42,15 @@ public class DimensionRegistry {
     public static final ResourceKey<LevelStem> SPAWN_LEVEL_STEM_KEY =
             ResourceKey.create(Registries.LEVEL_STEM, ResourceLocation.fromNamespaceAndPath("arcadia", "spawn"));
 
+    private static final int MAX_TOTAL_HEIGHT = 2032;
+
     @SubscribeEvent
     public static void onRegister(RegisterEvent event) {
+        DimensionType spawnDimType = createDimensionType();
+
         event.register(Registries.DIMENSION_TYPE, helper -> {
-            helper.register(SPAWN_DIM_TYPE_KEY, createDimensionType());
+            helper.register(SPAWN_DIM_TYPE_KEY, spawnDimType);
+            CustomDimensionManager.registerAllDimensionTypes(helper);
         });
 
         event.register(Registries.LEVEL_STEM, helper -> {
@@ -74,21 +79,26 @@ public class DimensionRegistry {
                 layers.add(new FlatLayerInfo(1, Blocks.BEDROCK));
             }
 
-            Optional<HolderSet<StructureSet>> structureOverrides = Optional.empty();
-            Holder<PlacedFeature> emptyFeature = Holder.direct(new PlacedFeature(
-                    Holder.direct(new ConfiguredFeature<>(Feature.NO_OP, NoneFeatureConfiguration.INSTANCE)),
-                    List.of()));
+            Holder<PlacedFeature> emptyFeature = emptyPlacedFeature();
 
             FlatLevelGeneratorSettings settings = createSettings(
-                    structureOverrides, layers, false,
+                    Optional.empty(), layers, false,
                     SpawnConfig.COMMON.latesAndFeatures.get(),
                     Optional.of(biomeHolder), biomeHolder,
                     emptyFeature, emptyFeature);
 
             FlatLevelSource source = new FlatLevelSource(settings);
-            LevelStem stem = new LevelStem(Holder.direct(createDimensionType()), source);
+            LevelStem stem = new LevelStem(Holder.direct(spawnDimType), source);
             helper.register(SPAWN_LEVEL_STEM_KEY, stem);
+
+            CustomDimensionManager.registerAllLevelStems(helper, biomeRegistry);
         });
+    }
+
+    public static Holder<PlacedFeature> emptyPlacedFeature() {
+        return Holder.direct(new PlacedFeature(
+                Holder.direct(new ConfiguredFeature<>(Feature.NO_OP, NoneFeatureConfiguration.INSTANCE)),
+                List.of()));
     }
 
     private static List<FlatLayerInfo> parseLayersSafe(List<? extends String> layerStrings) {
@@ -129,6 +139,24 @@ public class DimensionRegistry {
     }
 
     private static DimensionType createDimensionType() {
+        int minY = SpawnConfig.COMMON.minY.get();
+        int height = SpawnConfig.COMMON.height.get();
+        int logicalHeight = SpawnConfig.COMMON.logicalHeight.get();
+
+        // Anti-corruption clamps — Minecraft hard limits
+        if (height > MAX_TOTAL_HEIGHT) {
+            ArcadiaSpawnMod.LOGGER.warn("Dimension height {} exceeds max {}, clamping.", height, MAX_TOTAL_HEIGHT);
+            height = MAX_TOTAL_HEIGHT;
+        }
+        if (logicalHeight > height) {
+            ArcadiaSpawnMod.LOGGER.warn("logical_height {} > height {}, clamping.", logicalHeight, height);
+            logicalHeight = height;
+        }
+        if ((height & 15) != 0) {
+            height = (height >> 4) << 4;
+            ArcadiaSpawnMod.LOGGER.warn("height must be multiple of 16, snapped to {}.", height);
+        }
+
         return new DimensionType(
                 SpawnConfig.COMMON.timeLocked.get() ? OptionalLong.of(SpawnConfig.COMMON.fixedTime.get()) : OptionalLong.empty(),
                 SpawnConfig.COMMON.hasSkylight.get(),
@@ -138,9 +166,9 @@ public class DimensionRegistry {
                 SpawnConfig.COMMON.coordinateScale.get(),
                 SpawnConfig.COMMON.bedWorks.get(),
                 SpawnConfig.COMMON.respawnAnchorWorks.get(),
-                SpawnConfig.COMMON.minY.get(),
-                SpawnConfig.COMMON.height.get(),
-                SpawnConfig.COMMON.logicalHeight.get(),
+                minY,
+                height,
+                logicalHeight,
                 TagKey.create(Registries.BLOCK, ResourceLocation.parse(SpawnConfig.COMMON.infiniburn.get())),
                 ResourceLocation.parse(SpawnConfig.COMMON.effects.get()),
                 SpawnConfig.COMMON.ambientLight.get().floatValue(),
@@ -151,21 +179,33 @@ public class DimensionRegistry {
                         SpawnConfig.COMMON.monsterSpawnBlockLightLimit.get()));
     }
 
-    private static FlatLevelGeneratorSettings createSettings(
+    // Reflection constructor cached once at class init — avoids per-registration setAccessible cost.
+    private static final java.lang.reflect.Constructor<FlatLevelGeneratorSettings> FLAT_SETTINGS_CTOR;
+    static {
+        try {
+            FLAT_SETTINGS_CTOR = FlatLevelGeneratorSettings.class.getDeclaredConstructor(
+                    Optional.class, List.class, boolean.class, boolean.class,
+                    Optional.class, Holder.class, Holder.class, Holder.class);
+            FLAT_SETTINGS_CTOR.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("FlatLevelGeneratorSettings ctor not found", e);
+        }
+    }
+
+    public static FlatLevelGeneratorSettings createSettings(
             Optional<HolderSet<StructureSet>> structureOverrides,
             List<FlatLayerInfo> layers, boolean addLakes, boolean addFeatures,
             Optional<Holder<Biome>> biome, Holder.Reference<Biome> biomeFallback,
             Holder<PlacedFeature> lakeFeature, Holder<PlacedFeature> lavaLakeFeature) {
         try {
-            java.lang.reflect.Constructor<FlatLevelGeneratorSettings> ctor =
-                    FlatLevelGeneratorSettings.class.getDeclaredConstructor(
-                            Optional.class, List.class, boolean.class, boolean.class,
-                            Optional.class, Holder.class, Holder.class, Holder.class);
-            ctor.setAccessible(true);
-            return ctor.newInstance(structureOverrides, layers, addLakes, addFeatures,
+            return FLAT_SETTINGS_CTOR.newInstance(structureOverrides, layers, addLakes, addFeatures,
                     biome, biomeFallback, lakeFeature, lavaLakeFeature);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create FlatLevelGeneratorSettings via reflection", e);
+            throw new RuntimeException("Failed to create FlatLevelGeneratorSettings", e);
         }
+    }
+
+    public static List<FlatLayerInfo> parseLayersPublic(List<? extends String> layerStrings) {
+        return parseLayersSafe(layerStrings);
     }
 }

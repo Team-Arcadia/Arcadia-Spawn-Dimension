@@ -1,21 +1,27 @@
 package com.arcadia.spawn.lobby;
 
 import com.arcadia.spawn.ArcadiaSpawnMod;
+import com.arcadia.spawn.util.SafeFileIO;
 import com.google.gson.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class LobbyManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final List<LobbyLocation> ALL_LOCATIONS = new CopyOnWriteArrayList<>();
+    private static final Map<String, LobbyLocation> INDEX = new ConcurrentHashMap<>();
     private static final Path CONFIG_DIR = FMLPaths.CONFIGDIR.get().resolve("arcadia/spawn/lobbies");
 
     public static void init() {
@@ -24,6 +30,7 @@ public class LobbyManager {
 
     public static void reload() {
         ALL_LOCATIONS.clear();
+        INDEX.clear();
         try {
             if (!Files.exists(CONFIG_DIR)) {
                 Files.createDirectories(CONFIG_DIR);
@@ -33,26 +40,17 @@ public class LobbyManager {
             if (files == null) return;
 
             for (File file : files) {
-                try (FileReader reader = new FileReader(file)) {
-                    JsonElement json = GSON.fromJson(reader, JsonElement.class);
-                    if (json != null && json.isJsonArray()) {
-                        for (JsonElement element : json.getAsJsonArray()) {
-                            JsonObject obj = element.getAsJsonObject();
-                            ALL_LOCATIONS.add(LobbyLocation.of(
-                                    obj.get("name").getAsString(),
-                                    obj.get("dimension").getAsString(),
-                                    obj.get("x").getAsDouble(),
-                                    obj.get("y").getAsDouble(),
-                                    obj.get("z").getAsDouble(),
-                                    obj.get("yaw").getAsFloat(),
-                                    obj.get("pitch").getAsFloat(),
-                                    obj.has("description") ? obj.get("description").getAsString() : "",
-                                    obj.has("item") ? obj.get("item").getAsString() : "minecraft:paper"
-                            ));
+                if (!loadFile(file)) {
+                    File backup = SafeFileIO.findLatestBackup(file.toPath());
+                    if (backup != null) {
+                        ArcadiaSpawnMod.LOGGER.warn("Lobby file {} unreadable, restoring from {}", file.getName(), backup.getName());
+                        try {
+                            Files.copy(backup.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            loadFile(file);
+                        } catch (IOException io) {
+                            ArcadiaSpawnMod.LOGGER.error("Failed to restore lobby file {} from backup", file.getName(), io);
                         }
                     }
-                } catch (Exception e) {
-                    ArcadiaSpawnMod.LOGGER.error("Failed to load lobby config: {}", file.getName(), e);
                 }
             }
             ArcadiaSpawnMod.LOGGER.info("Loaded {} lobby locations.", ALL_LOCATIONS.size());
@@ -61,25 +59,53 @@ public class LobbyManager {
         }
     }
 
+    private static boolean loadFile(File file) {
+        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
+            JsonElement json = GSON.fromJson(reader, JsonElement.class);
+            if (json == null || !json.isJsonArray()) return false;
+            for (JsonElement element : json.getAsJsonArray()) {
+                JsonObject obj = element.getAsJsonObject();
+                LobbyLocation loc = LobbyLocation.of(
+                        obj.get("name").getAsString(),
+                        obj.get("dimension").getAsString(),
+                        obj.get("x").getAsDouble(),
+                        obj.get("y").getAsDouble(),
+                        obj.get("z").getAsDouble(),
+                        obj.get("yaw").getAsFloat(),
+                        obj.get("pitch").getAsFloat(),
+                        obj.has("description") ? obj.get("description").getAsString() : "",
+                        obj.has("item") ? obj.get("item").getAsString() : "minecraft:paper"
+                );
+                ALL_LOCATIONS.add(loc);
+                INDEX.put(loc.name().toLowerCase(Locale.ROOT), loc);
+            }
+            return true;
+        } catch (Exception e) {
+            ArcadiaSpawnMod.LOGGER.error("Failed to load lobby config: {}", file.getName(), e);
+            return false;
+        }
+    }
+
     public static void addLocation(LobbyLocation location) {
-        ALL_LOCATIONS.removeIf(l -> l.name().equalsIgnoreCase(location.name()));
+        String key = location.name().toLowerCase(Locale.ROOT);
+        LobbyLocation existing = INDEX.remove(key);
+        if (existing != null) ALL_LOCATIONS.remove(existing);
         ALL_LOCATIONS.add(location);
+        INDEX.put(key, location);
         saveDimension(location.dimension());
     }
 
     public static boolean removeLocation(String name) {
-        LobbyLocation loc = getLocation(name);
+        String key = name.toLowerCase(Locale.ROOT);
+        LobbyLocation loc = INDEX.remove(key);
         if (loc == null) return false;
-        boolean removed = ALL_LOCATIONS.remove(loc);
-        if (removed) saveDimension(loc.dimension());
-        return removed;
+        ALL_LOCATIONS.remove(loc);
+        saveDimension(loc.dimension());
+        return true;
     }
 
     public static LobbyLocation getLocation(String name) {
-        for (LobbyLocation loc : ALL_LOCATIONS) {
-            if (loc.name().equalsIgnoreCase(name)) return loc;
-        }
-        return null;
+        return INDEX.get(name.toLowerCase(Locale.ROOT));
     }
 
     public static void updateLocation(String name, LobbyLocation newLocation) {
@@ -96,7 +122,7 @@ public class LobbyManager {
 
     private static void saveDimension(ResourceKey<Level> dimensionKey) {
         String filename = dimensionKey.location().getPath() + ".json";
-        File file = CONFIG_DIR.resolve(filename).toFile();
+        Path target = CONFIG_DIR.resolve(filename);
 
         List<LobbyLocation> toSave = new ArrayList<>();
         for (LobbyLocation loc : ALL_LOCATIONS) {
@@ -106,7 +132,7 @@ public class LobbyManager {
         }
 
         if (toSave.isEmpty()) {
-            if (file.exists()) file.delete();
+            try { Files.deleteIfExists(target); } catch (IOException ignored) {}
             return;
         }
 
@@ -125,10 +151,10 @@ public class LobbyManager {
             array.add(obj);
         }
 
-        try (FileWriter writer = new FileWriter(file)) {
-            GSON.toJson(array, writer);
+        try {
+            SafeFileIO.writeAtomicWithBackup(target, GSON.toJson(array));
         } catch (IOException e) {
-            ArcadiaSpawnMod.LOGGER.error("Failed to save lobby location to {}", file.getName(), e);
+            ArcadiaSpawnMod.LOGGER.error("Failed to save lobby file {}", filename, e);
         }
     }
 }

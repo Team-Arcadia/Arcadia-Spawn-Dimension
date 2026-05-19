@@ -4,7 +4,83 @@ All notable changes to Arcadia Spawn are documented here.
 
 ---
 
-## [1.5.2] - 2026-04-23 (latest)
+## [1.5.3] - 2026-05-19 (latest)
+
+### Added
+
+- **Custom dimension system** — New `/arcadia_spawn dimension create <id> [preset] [biome]`, `/arcadia_spawn dimension delete <id> [purge]`, and `/arcadia_spawn dimension list` commands. Definitions are serialized to `config/arcadia/spawn/dimensions/<id>.json` and registered at server startup under the dedicated `arcadia_custom:` namespace. Presets ship for `flat`, `void`, and `lobby`. Restart is required for newly-created dimensions to be picked up — this is a NeoForge limitation (level stems can only be registered during `RegisterEvent`). The original `arcadia:spawn` dimension is untouched; everything is opt-in.
+- **Mod-removal manifest** — A `_manifest.json` is auto-written next to dimension files listing every custom dimension owned by the mod, plus the exact cleanup path admins should remove from the world save if the mod is uninstalled. Deleting a dimension with `purge=true` additionally writes a `_purge_<id>.marker` so the world data folder can be audited after shutdown.
+- **Per-command permission nodes** — Each admin subcommand now has its own NeoForge `PermissionNode` (LuckPerms compatible): `arcadia_spawn.command.reload`, `setlobbytp`, `dellobbytp`, `edit`, `tp`, `setspawn`, `debug`, `dimension.create` (op 4), `dimension.delete` (op 4), `dimension.list`. Falls back to vanilla op-level when no permission backend is installed.
+- **Strict input validation** — Lobby names and dimension ids are now matched against a regex and a Windows-reserved-name blocklist before any disk write. Descriptions are length-clamped and stripped of control characters. Prevents path-traversal, filename injection, and accidental NUL/CON/AUX-style filenames on Windows hosts.
+- **Anti-spam rate limiter** — Lobby menu open requests (both `/lobby` and the C2SOpenLobby packet from the hub card) are throttled to 5 calls per 10 seconds per player. Protects against a misbehaving client spamming GUIs.
+- **Transaction-safe persistence** — All JSON writes go through `SafeFileIO.writeAtomicWithBackup()`: backup of the previous file → write to `.tmp` → atomic rename. Up to 5 rotated backups are kept per file under `<dir>/backups/`. If the primary file is unreadable at startup, the latest backup is restored automatically.
+
+### Changed
+
+- **`LobbyManager` lookups are now O(1)** — Added a `ConcurrentHashMap` index keyed by lower-case lobby name. `getLocation()`, `addLocation()`, and `removeLocation()` no longer linear-scan the list. Tab-completion (3 commands × N lobbies) and `/arcadia_spawn tp` are faster on servers with many lobbies.
+- **`DimensionRegistry` reflection cached** — The `FlatLevelGeneratorSettings` private-constructor lookup is now a `static final Constructor` initialized once, instead of being resolved and `setAccessible(true)`'d on every dimension registration. The vanilla `arcadia:spawn` `DimensionType` is also built once and reused for both the `DIMENSION_TYPE` and `LEVEL_STEM` registrations (was being constructed twice).
+- **`SpawnCommands` refactor** — Lobby-name suggestions are factored into a single `SuggestionProvider` constant instead of being inlined three times. Custom-dim and preset suggestions follow the same pattern.
+- **Brigadier-level permission gating** — `.requires()` predicates now use `PermissionRegistry.require(NODE, opFallback)` instead of raw `hasPermission(2)`, so commands disappear from tab-completion for unauthorized players whether they're op-gated or LuckPerms-gated.
+
+### Fixed
+
+- **`SpawnData` NBT robustness** — A corrupted `dimensionId` field (invalid `ResourceLocation`) used to crash teleport on first dereference. The loader now validates the parse, falls back to `arcadia:spawn`, and logs the original value. A blanket try/catch around NBT load resets to defaults instead of throwing.
+
+### Performance
+
+- **`TeleportHelper.tick()` short-circuits when empty** — The server tick handler iterated a `ConcurrentHashMap` every tick even when no warmups were active. A single `isEmpty()` guard at the top skips the iterator allocation on the common path (0 warmups).
+- **`RTPCommand.findRandomSafePos()` zero-allocation** — Uses `BlockPos.MutableBlockPos` for the candidate cursor and ground check instead of allocating a `BlockPos` + `BlockPos.below()` per attempt. With `rtp_max_attempts=50` this saves up to 100 allocations per `/arcadiartp` call. Min/max build heights are also hoisted out of the loop.
+
+### Security
+
+- **Server-authoritative everywhere** — `MobSpawnHandler`'s `isClientSide()` guard (already in 1.5.1) is documented as part of a broader policy: every gameplay decision (mob filter, spawn TP, slot bypass, dimension registration) runs server-side only. Client-friendly = no client-only writes, no client-trusted state.
+- **Hardened kick message handling** — The slot-bypass kick message still supports `&`-prefixed color codes but is sanitized when written through `SafeFileIO` along with the rest of the config layer.
+
+### Backward Compatibility
+
+- **`arcadia:spawn` is preserved exactly as-is.** Existing worlds, existing `SpawnData`, existing lobby files, existing `config/arcadia/spawn/config.toml`, existing `slot_bypass.toml` — all continue to work without migration. The custom-dimension system is opt-in: if you never run `/arcadia_spawn dimension create`, nothing changes on disk and nothing new is registered.
+- All previously-valid lobby names continue to be accepted; the new validation rules are a strict subset of what was already allowed in practice (the old code would silently break on filename-illegal characters anyway).
+
+---
+
+### Ajouts
+
+- **Système de dimensions personnalisées** — Nouvelles commandes `/arcadia_spawn dimension create <id> [preset] [biome]`, `/arcadia_spawn dimension delete <id> [purge]`, et `/arcadia_spawn dimension list`. Les définitions sont sérialisées dans `config/arcadia/spawn/dimensions/<id>.json` et enregistrées au démarrage du serveur sous le namespace dédié `arcadia_custom:`. Presets disponibles : `flat`, `void`, `lobby`. Un redémarrage est requis pour activer une nouvelle dimension — limitation NeoForge (les `LevelStem` ne peuvent être enregistrés qu'au `RegisterEvent`). La dimension `arcadia:spawn` d'origine n'est jamais touchée ; tout est opt-in.
+- **Manifest de retrait du mod** — Un `_manifest.json` est écrit automatiquement à côté des fichiers de dimension, listant chaque dimension custom détenue par le mod, plus le chemin exact à supprimer du world save si l'admin désinstalle le mod. La suppression avec `purge=true` écrit en plus un `_purge_<id>.marker` pour auditer le dossier de données du monde après shutdown.
+- **Nodes de permission par commande** — Chaque sous-commande admin a maintenant son propre `PermissionNode` NeoForge (compatible LuckPerms) : `arcadia_spawn.command.reload`, `setlobbytp`, `dellobbytp`, `edit`, `tp`, `setspawn`, `debug`, `dimension.create` (op 4), `dimension.delete` (op 4), `dimension.list`. Fallback sur op-level vanilla si pas de backend de permissions.
+- **Validation stricte des entrées** — Noms de lobby et identifiants de dimension sont vérifiés via regex + blocklist Windows (CON, NUL, etc.) avant toute écriture disque. Les descriptions sont limitées en taille et débarrassées des caractères de contrôle. Empêche l'injection de filename, le path-traversal et les filenames Windows réservés.
+- **Limiteur anti-spam** — Les requêtes d'ouverture du menu lobby (via `/lobby` ou le packet C2SOpenLobby depuis la carte hub) sont limitées à 5 appels par 10 secondes par joueur. Protège contre un client mal intentionné qui spammerait les GUIs.
+- **Persistance transactionnelle** — Toutes les écritures JSON passent par `SafeFileIO.writeAtomicWithBackup()` : backup du fichier précédent → écriture dans `.tmp` → rename atomique. Jusqu'à 5 backups roulants sont conservés par fichier sous `<dir>/backups/`. Si le fichier principal est illisible au démarrage, le backup le plus récent est restauré automatiquement.
+
+### Modifications
+
+- **Recherches `LobbyManager` en O(1)** — Ajout d'un `ConcurrentHashMap` indexé par nom en lowercase. `getLocation()`, `addLocation()` et `removeLocation()` ne font plus de scan linéaire. Le tab-complete (3 commandes × N lobbies) et `/arcadia_spawn tp` deviennent plus rapides sur les serveurs avec beaucoup de lobbies.
+- **Reflection mise en cache dans `DimensionRegistry`** — Le constructeur privé de `FlatLevelGeneratorSettings` est maintenant un `static final Constructor` initialisé une seule fois, au lieu d'être résolu et `setAccessible(true)`'d à chaque enregistrement de dimension. Le `DimensionType` de `arcadia:spawn` est aussi construit une seule fois et réutilisé pour les enregistrements `DIMENSION_TYPE` et `LEVEL_STEM` (il était construit deux fois).
+- **Refactor de `SpawnCommands`** — Les suggestions de noms de lobby sont factorisées dans un `SuggestionProvider` unique au lieu d'être inlinées trois fois. Les suggestions dimension/preset suivent le même pattern.
+- **Gating Brigadier basé permissions** — Les prédicats `.requires()` utilisent `PermissionRegistry.require(NODE, opFallback)` au lieu d'un `hasPermission(2)` brut, donc les commandes disparaissent du tab-complete pour les joueurs non autorisés, qu'ils soient gérés par op-level ou par LuckPerms.
+
+### Correctifs
+
+- **Robustesse NBT de `SpawnData`** — Un `dimensionId` corrompu (`ResourceLocation` invalide) faisait crasher au premier déréférencement de teleport. Le loader valide maintenant le parse, fallback sur `arcadia:spawn`, et log la valeur d'origine. Un try/catch global au chargement NBT reset les valeurs par défaut au lieu de throw.
+
+### Performance
+
+- **`TeleportHelper.tick()` court-circuit si vide** — Le handler `ServerTickEvent.Post` itérait un `ConcurrentHashMap` à chaque tick même sans warmup actif. Un simple `isEmpty()` en tête saute l'allocation de l'itérateur sur le chemin commun (0 warmup).
+- **`RTPCommand.findRandomSafePos()` zéro-allocation** — Utilise un `BlockPos.MutableBlockPos` pour le curseur et le check sol au lieu d'allouer un `BlockPos` + `BlockPos.below()` à chaque tentative. Avec `rtp_max_attempts=50` ça économise jusqu'à 100 allocations par appel `/arcadiartp`. Les bornes min/max de la dimension sont aussi sorties de la boucle.
+
+### Sécurité
+
+- **Server-authoritative partout** — Le guard `isClientSide()` de `MobSpawnHandler` (déjà en 1.5.1) est documenté comme une politique générale : chaque décision gameplay (filtre mob, TP spawn, slot bypass, enregistrement de dimension) tourne côté serveur uniquement. Client-friendly = pas d'écriture client-only, pas d'état client-trusted.
+- **Message de kick assaini** — Le message de kick slot-bypass supporte toujours les codes couleur préfixés `&` mais est nettoyé quand il passe par `SafeFileIO` avec le reste de la couche config.
+
+### Compatibilité ascendante
+
+- **`arcadia:spawn` est préservé tel quel.** Les mondes existants, le `SpawnData` existant, les fichiers de lobby existants, `config/arcadia/spawn/config.toml`, `slot_bypass.toml` — tout continue de fonctionner sans migration. Le système de dimensions custom est opt-in : si vous ne lancez jamais `/arcadia_spawn dimension create`, rien ne change sur le disque et rien de nouveau n'est enregistré.
+- Tous les noms de lobby précédemment valides continuent d'être acceptés ; les nouvelles règles de validation sont un sous-ensemble strict de ce que l'ancien code acceptait en pratique (il cassait silencieusement sur les caractères illégaux dans les noms de fichier de toute façon).
+
+---
+
+## [1.5.2] - 2026-04-23
 
 ### Fixed
 

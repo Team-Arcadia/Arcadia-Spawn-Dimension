@@ -46,7 +46,9 @@ Arcadia Spawn is a feature-rich spawn dimension manager designed for the Arcadia
 | **Bilingual** | Automatic language detection (English/French) based on client settings |
 | **Dimension-Aware Spawn** | Spawn point stores dimension ID — works across any dimension |
 | **Respawn Control** | Configurable respawn to spawn point when player has no bed/anchor |
-| **Optimized** | Zero tick handlers, ThreadLocalRandom, CopyOnWriteArrayList, event-driven only |
+| **Custom Dimensions** | Create/list/delete user dimensions under `arcadia_custom:*` (1.5.3+) |
+| **Anti-Corruption** | Atomic writes, rotated backups, NBT validation, auto-recovery on load failure |
+| **Optimized** | Zero tick handlers, O(1) lobby lookups, ThreadLocalRandom RTP, event-driven only |
 
 ## Commands
 
@@ -67,6 +69,9 @@ Arcadia Spawn is a feature-rich spawn dimension manager designed for the Arcadia
 | `tp <name>` | Op Level 2 | Teleport directly to a warp point |
 | `setspawn` | Op Level 2 | Set spawn at current position (stores dimension) |
 | `/setlobbyspawn` | Op Level 2 | Alias for setspawn (backward compat) |
+| `dimension create <id> [preset] [biome]` | Op Level 4 | Create a new custom dimension (`arcadia_custom:<id>`). Restart required. |
+| `dimension delete <id> [purge]` | Op Level 4 | Delete a custom dimension definition. `purge=true` writes a cleanup marker. |
+| `dimension list` | Op Level 2 | List all custom dimensions and their load status |
 
 ### Debug Commands (`/arcadia_spawn debug`)
 | Command | Description |

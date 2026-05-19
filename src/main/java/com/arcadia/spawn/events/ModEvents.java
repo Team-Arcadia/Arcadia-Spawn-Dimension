@@ -5,6 +5,7 @@ import com.arcadia.spawn.commands.SpawnCommands;
 import com.arcadia.spawn.commands.DebugCommands;
 import com.arcadia.spawn.commands.TeleportHelper;
 import com.arcadia.spawn.config.SpawnConfig;
+import com.arcadia.spawn.util.RateLimiter;
 import com.arcadia.spawn.world.SpawnData;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -61,6 +62,7 @@ public class ModEvents {
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             TeleportHelper.onDisconnect(player.getUUID());
+            RateLimiter.onDisconnect(player.getUUID());
         }
     }
 
@@ -69,15 +71,12 @@ public class ModEvents {
         if (event.isEndConquered()) return;
 
         if (event.getEntity() instanceof ServerPlayer player) {
-            // If player has a valid bed/anchor and force_respawn is off, skip
             if (player.getRespawnPosition() != null && !SpawnConfig.COMMON.forceSpawnOnRespawn.get()) return;
 
-            // If player has no bed/anchor, OR force_respawn is enabled, send to spawn
             SpawnData data = SpawnData.get();
             if (data.isSet()) {
                 ServerLevel targetLevel = player.getServer().getLevel(data.getDimensionKey());
                 if (targetLevel != null) {
-                    // Schedule for next tick to ensure respawn completes first
                     player.getServer().execute(() -> {
                         player.resetFallDistance();
                         player.teleportTo(targetLevel, data.getX(), data.getY(), data.getZ(),

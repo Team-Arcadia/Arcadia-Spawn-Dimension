@@ -86,6 +86,10 @@ chore: maintenance tasks
 - Config options go in `SpawnConfig.java` (COMMON) or `SlotBypassConfig.java` (SERVER)
 - Config paths under `config/arcadia/spawn/`
 - Lobby data stored in `config/arcadia/spawn/lobbies/`
+- Custom dimension defs stored in `config/arcadia/spawn/dimensions/` (namespace `arcadia_custom:*`)
+- All JSON writes go through `SafeFileIO.writeAtomicWithBackup` (atomic + rotated backups)
+- Validate any user-provided identifier through `InputValidation` before disk write
+- Rate-limit packet handlers and player-callable command paths via `RateLimiter`
 - Thread-safe collections (`CopyOnWriteArrayList`, `ConcurrentHashMap`) for shared state
 - Never block the server thread
 
@@ -214,3 +218,7 @@ ls libs/arcadia-lib-*.jar
 13. Use `CooldownManager` from arcadia-lib for cooldowns
 14. Hub card: row=0, sortOrder=0, uses C2SOpenLobby packet (not tab system)
 15. Mixin config file: `arcadia_spawn.mixins.json` (not `arcadiaspawn.mixins.json`)
+16. The `arcadia:spawn` dimension is the canonical built-in dimension — NEVER move it under `arcadia_custom:` or change its key
+17. Custom dimensions live under `arcadia_custom:*` ONLY. The `arcadia:` namespace is reserved for built-in
+18. Permission nodes are declared in `PermissionRegistry` — add new admin commands there with their op-level fallback
+19. All player-callable commands should consider a `RateLimiter.tryAcquire()` guard if they open GUIs or trigger expensive work

@@ -32,5 +32,14 @@
     "key.arcadia_spawn.open_lobby": "Open Lobby Menu",
     "key.categories.arcadia_spawn": "Arcadia Spawn",
 
-    "arcadia_spawn.lobby.click_tp": "Click to teleport"
+    "arcadia_spawn.lobby.click_tp": "Click to teleport",
+
+    "arcadia_spawn.command.invalid_name": "Invalid name. Use only letters, digits, _ or - (1-32 chars).",
+    "arcadia_spawn.command.dimension.invalid_id": "Invalid dimension id. Use lowercase letters, digits and _ (3-32 chars).",
+    "arcadia_spawn.command.dimension.exists": "A dimension with that id already exists.",
+    "arcadia_spawn.command.dimension.created": "Dimension '%s' created. Restart the server to load it.",
+    "arcadia_spawn.command.dimension.deleted": "Dimension '%s' deleted.",
+    "arcadia_spawn.command.dimension.not_found": "No such custom dimension: '%s'.",
+    "arcadia_spawn.command.dimension.list_header": "Custom dimensions (%s):",
+    "arcadia_spawn.command.dimension.list_empty": "No custom dimensions registered yet."
 }

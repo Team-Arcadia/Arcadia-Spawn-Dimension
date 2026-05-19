@@ -1,5 +1,6 @@
 package com.arcadia.spawn.world;
 
+import com.arcadia.spawn.ArcadiaSpawnMod;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -32,14 +33,25 @@ public class SpawnData extends SavedData {
 
     public static SpawnData load(CompoundTag tag, HolderLookup.Provider provider) {
         SpawnData data = new SpawnData();
-        data.x = tag.getDouble("spawnX");
-        data.y = tag.getDouble("spawnY");
-        data.z = tag.getDouble("spawnZ");
-        data.yaw = tag.getFloat("spawnYaw");
-        data.pitch = tag.getFloat("spawnPitch");
-        data.set = tag.getBoolean("isSet");
-        if (tag.contains("dimensionId")) {
-            data.dimensionId = tag.getString("dimensionId");
+        try {
+            data.x = tag.getDouble("spawnX");
+            data.y = tag.getDouble("spawnY");
+            data.z = tag.getDouble("spawnZ");
+            data.yaw = tag.getFloat("spawnYaw");
+            data.pitch = tag.getFloat("spawnPitch");
+            data.set = tag.getBoolean("isSet");
+            if (tag.contains("dimensionId")) {
+                String stored = tag.getString("dimensionId");
+                // Validate the stored dimension id — if NBT was corrupted, fall back to default
+                if (ResourceLocation.tryParse(stored) != null) {
+                    data.dimensionId = stored;
+                } else {
+                    ArcadiaSpawnMod.LOGGER.warn("Invalid dimensionId '{}' in spawn data — defaulting to arcadia:spawn.", stored);
+                }
+            }
+        } catch (Exception e) {
+            ArcadiaSpawnMod.LOGGER.error("SpawnData NBT corrupted — resetting to defaults.", e);
+            return new SpawnData();
         }
         return data;
     }

@@ -30,6 +30,7 @@ public record C2SOpenLobby() implements CustomPacketPayload {
     public static void handle(C2SOpenLobby pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (ctx.player() instanceof ServerPlayer player) {
+                // Rate limit is applied inside openLobbyForPlayer to also cover /lobby command path.
                 SpawnCommands.openLobbyForPlayer(player);
             }
         });

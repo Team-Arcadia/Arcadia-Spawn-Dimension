@@ -84,31 +84,30 @@ public class RTPCommand {
     private static BlockPos findRandomSafePos(ServerLevel level, int maxAttempts) {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
         int radius = SpawnConfig.COMMON.rtpRadius.get();
+        int minBuild = level.getMinBuildHeight() + 5;
+        int maxBuild = level.getMaxBuildHeight() - 5;
+
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos below = new BlockPos.MutableBlockPos();
 
         for (int attempts = 0; attempts < maxAttempts; attempts++) {
             int x = rand.nextInt(-radius, radius + 1);
             int z = rand.nextInt(-radius, radius + 1);
 
-            // Load chunk
             level.getChunk(x >> 4, z >> 4);
 
             int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
+            if (y < minBuild || y > maxBuild) continue;
 
-            if (y < level.getMinBuildHeight() + 5 || y > level.getMaxBuildHeight() - 5) continue;
+            cursor.set(x, y, z);
+            below.set(x, y - 1, z);
 
-            BlockPos pos = new BlockPos(x, y, z);
-            BlockPos below = pos.below();
-
-            // Skip liquids
-            if (!level.getFluidState(pos).isEmpty() || !level.getFluidState(below).isEmpty()) continue;
-
-            // Needs solid ground
+            if (!level.getFluidState(cursor).isEmpty() || !level.getFluidState(below).isEmpty()) continue;
             if (level.getBlockState(below).isAir()) continue;
 
-            return pos;
+            return cursor.immutable();
         }
 
-        // Fallback: world origin surface
         return new BlockPos(0, level.getHeight(Heightmap.Types.WORLD_SURFACE, 0, 0), 0);
     }
 }
