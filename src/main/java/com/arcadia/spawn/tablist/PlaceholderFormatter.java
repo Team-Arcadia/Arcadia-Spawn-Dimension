@@ -93,17 +93,21 @@ public final class PlaceholderFormatter {
 
     private static List<Component> expandPeers(List<PeerSnapshot> peers) {
         List<Component> out = new java.util.ArrayList<>();
+        // When cross-server is disabled (or DB unreachable on a single-server setup),
+        // peers is always empty — render nothing rather than the intrusive
+        // "no peers reachable" placeholder that wastes a footer line.
         if (peers == null || peers.isEmpty()) {
-            out.add(translateColors("&8 (no peers reachable)"));
             return out;
         }
         for (PeerSnapshot p : peers) {
-            String name = (p.displayName() != null && !p.displayName().isBlank()) ? p.displayName() : p.serverId();
+            String rawName = (p.displayName() != null && !p.displayName().isBlank()) ? p.displayName() : p.serverId();
+            // Pad/truncate to a tidy 10-char column so the counts align.
+            String name = rawName.length() > 10 ? rawName.substring(0, 10) : String.format("%-10s", rawName);
             String body;
             if (p.alive()) {
-                body = String.format("&7  %-12s &a%d&7/&a%d &2●", name, p.online(), p.max());
+                body = String.format("&8• &f%s  &a%d&7/&8%d", name, p.online(), p.max());
             } else {
-                body = String.format("&7  %-12s &c offline &c○", name);
+                body = String.format("&8• &7%s  &coffline", name);
             }
             out.add(translateColors(body));
         }

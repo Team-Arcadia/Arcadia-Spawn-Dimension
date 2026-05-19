@@ -35,6 +35,9 @@ public class TabListConfig {
         public final ModConfigSpec.ConfigValue<Boolean> groupSortingEnabled;
         public final ModConfigSpec.ConfigValue<Boolean> showLuckPermsPrefix;
 
+        // Spectator hiding
+        public final ModConfigSpec.ConfigValue<Boolean> hideSpectatorsFromTab;
+
         // Cross-server (via arcadia-lib DB)
         public final ModConfigSpec.ConfigValue<Boolean> crossServerEnabled;
         public final ModConfigSpec.ConfigValue<Integer> heartbeatIntervalSeconds;
@@ -67,8 +70,10 @@ public class TabListConfig {
                     "Color codes: use '&' (e.g. '&6Welcome &fto &b%server%').")
                     .defineList("header_lines",
                             Arrays.asList(
-                                    "&6&l━━━━━━━━━━ &b&lArcadia &7• &f%server% &6&l━━━━━━━━━━",
-                                    "&7Online: &a%online%&7/&a%max% &8| &7TPS: &a%tps% &8| &7Network: &a%cross_total%"
+                                    "",
+                                    "&b&lArcadia &8• &f%server%",
+                                    "&7%online%&8/&7%max% online &8• &7TPS &a%tps% &8• &7Net &a%cross_total%",
+                                    ""
                             ),
                             entry -> entry instanceof String);
 
@@ -78,10 +83,13 @@ public class TabListConfig {
                     "  the line %peers% is auto-expanded to one row per peer.")
                     .defineList("footer_lines",
                             Arrays.asList(
-                                    "&8 ",
+                                    "",
                                     "%peers%",
-                                    "&8 ",
-                                    "&7Your ping: &a%player_ping%ms &8| &7Playtime: &a%player_playtime%"
+                                    "",
+                                    "&7Ping &a%player_ping%ms &8• &7Playtime &a%player_playtime%",
+                                    "",
+                                    "&b&narcadia-echoes-of-power.fr",
+                                    ""
                             ),
                             entry -> entry instanceof String);
 
@@ -102,6 +110,11 @@ public class TabListConfig {
                     "Prefix the player name with their LuckPerms group prefix (e.g. '[VIP] Player').",
                     "Has no effect without LuckPerms.")
                     .define("show_luckperms_prefix", true);
+
+            hideSpectatorsFromTab = builder.comment(
+                    "Hide players in vanilla Spectator gamemode from the tab list of normal players.",
+                    "Spectators still see each other in the tab so co-moderation works.")
+                    .define("hide_spectators_from_tab", true);
             builder.pop();
 
             builder.push("Cross-Server Sync");

@@ -44,12 +44,15 @@ public class DimensionRegistry {
 
     private static final int MAX_TOTAL_HEIGHT = 2032;
 
+    // Memoized across the two register passes (DIMENSION_TYPE + LEVEL_STEM), populated
+    // inside the DIMENSION_TYPE register lambda when the config is guaranteed to be loaded.
+    private static DimensionType cachedSpawnDimType;
+
     @SubscribeEvent
     public static void onRegister(RegisterEvent event) {
-        DimensionType spawnDimType = createDimensionType();
-
         event.register(Registries.DIMENSION_TYPE, helper -> {
-            helper.register(SPAWN_DIM_TYPE_KEY, spawnDimType);
+            cachedSpawnDimType = createDimensionType();
+            helper.register(SPAWN_DIM_TYPE_KEY, cachedSpawnDimType);
             CustomDimensionManager.registerAllDimensionTypes(helper);
         });
 
@@ -87,8 +90,9 @@ public class DimensionRegistry {
                     Optional.of(biomeHolder), biomeHolder,
                     emptyFeature, emptyFeature);
 
+            DimensionType dimType = cachedSpawnDimType != null ? cachedSpawnDimType : createDimensionType();
             FlatLevelSource source = new FlatLevelSource(settings);
-            LevelStem stem = new LevelStem(Holder.direct(spawnDimType), source);
+            LevelStem stem = new LevelStem(Holder.direct(dimType), source);
             helper.register(SPAWN_LEVEL_STEM_KEY, stem);
 
             CustomDimensionManager.registerAllLevelStems(helper, biomeRegistry);
@@ -179,16 +183,39 @@ public class DimensionRegistry {
                         SpawnConfig.COMMON.monsterSpawnBlockLightLimit.get()));
     }
 
-    // Reflection constructor cached once at class init — avoids per-registration setAccessible cost.
-    private static final java.lang.reflect.Constructor<FlatLevelGeneratorSettings> FLAT_SETTINGS_CTOR;
-    static {
-        try {
-            FLAT_SETTINGS_CTOR = FlatLevelGeneratorSettings.class.getDeclaredConstructor(
-                    Optional.class, List.class, boolean.class, boolean.class,
-                    Optional.class, Holder.class, Holder.class, Holder.class);
-            FLAT_SETTINGS_CTOR.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException("FlatLevelGeneratorSettings ctor not found", e);
+    // Reflection constructor resolved lazily on first call (not <clinit>) — some
+    // NeoForge dev environments apply access transformers after class init, so
+    // resolving at static-init time can fail with NoSuchMethodException even
+    // though the same lookup at RegisterEvent time succeeds.
+    private static volatile java.lang.reflect.Constructor<FlatLevelGeneratorSettings> FLAT_SETTINGS_CTOR;
+
+    private static java.lang.reflect.Constructor<FlatLevelGeneratorSettings> flatSettingsCtor() {
+        var local = FLAT_SETTINGS_CTOR;
+        if (local != null) return local;
+        synchronized (DimensionRegistry.class) {
+            local = FLAT_SETTINGS_CTOR;
+            if (local != null) return local;
+            // Match by arity + leading types rather than exact strict signatures so we are
+            // robust against minor mapping differences in the dev environment.
+            for (var c : FlatLevelGeneratorSettings.class.getDeclaredConstructors()) {
+                Class<?>[] p = c.getParameterTypes();
+                if (p.length == 8
+                        && p[0] == Optional.class
+                        && p[1] == List.class
+                        && p[2] == boolean.class
+                        && p[3] == boolean.class
+                        && p[4] == Optional.class
+                        && Holder.class.isAssignableFrom(p[5])
+                        && Holder.class.isAssignableFrom(p[6])
+                        && Holder.class.isAssignableFrom(p[7])) {
+                    c.setAccessible(true);
+                    @SuppressWarnings("unchecked")
+                    var picked = (java.lang.reflect.Constructor<FlatLevelGeneratorSettings>) c;
+                    FLAT_SETTINGS_CTOR = picked;
+                    return picked;
+                }
+            }
+            throw new RuntimeException("FlatLevelGeneratorSettings 8-arg ctor not found");
         }
     }
 
@@ -198,7 +225,7 @@ public class DimensionRegistry {
             Optional<Holder<Biome>> biome, Holder.Reference<Biome> biomeFallback,
             Holder<PlacedFeature> lakeFeature, Holder<PlacedFeature> lavaLakeFeature) {
         try {
-            return FLAT_SETTINGS_CTOR.newInstance(structureOverrides, layers, addLakes, addFeatures,
+            return flatSettingsCtor().newInstance(structureOverrides, layers, addLakes, addFeatures,
                     biome, biomeFallback, lakeFeature, lavaLakeFeature);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create FlatLevelGeneratorSettings", e);

@@ -6,6 +6,7 @@ import com.arcadia.spawn.commands.DebugCommands;
 import com.arcadia.spawn.commands.TeleportHelper;
 import com.arcadia.spawn.config.SpawnConfig;
 import com.arcadia.spawn.tablist.LuckPermsListener;
+import com.arcadia.spawn.tablist.SpectatorVisibility;
 import com.arcadia.spawn.tablist.TabListManager;
 import com.arcadia.spawn.util.RateLimiter;
 import com.arcadia.spawn.world.SpawnData;
@@ -72,6 +73,14 @@ public class ModEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             TeleportHelper.onDisconnect(player.getUUID());
             RateLimiter.onDisconnect(player.getUUID());
+            SpectatorVisibility.onPlayerDisconnect(player.getUUID());
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerGameModeChange(PlayerEvent.PlayerChangeGameModeEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            SpectatorVisibility.onGameModeChange(player, event.getNewGameMode());
         }
     }
 

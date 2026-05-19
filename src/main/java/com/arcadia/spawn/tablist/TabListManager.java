@@ -69,6 +69,10 @@ public final class TabListManager {
             PEER_CACHE.set(Collections.emptyList());
         }
 
+        // Reconcile spectator visibility before sending header/footer so any pending
+        // game-mode change we missed (e.g. /gamemode spectator from console) is honored.
+        SpectatorVisibility.reconcile(server);
+
         List<PeerSnapshot> peers = PEER_CACHE.get();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             apply(player, server, peers);
@@ -136,12 +140,20 @@ public final class TabListManager {
             team.setSeeFriendlyInvisibles(false);
         }
 
-        // Prefix from LuckPerms meta (translated) when enabled
+        // Prefix from LuckPerms meta (translated) when enabled.
+        // Ensure a trailing space so the prefix is visually separated from the player
+        // name (LP sometimes returns a prefix without a trailing space which makes
+        // "[Owner]Player" stick together in the tab list).
         if (TabListConfig.VALUES.showLuckPermsPrefix.get() && grade.prefix() != null && !grade.prefix().isEmpty()) {
-            team.setPlayerPrefix(PlaceholderFormatter.translateColors(grade.prefix()));
+            String raw = grade.prefix();
+            if (!raw.endsWith(" ") && !raw.endsWith("&r ") && !raw.endsWith("§r ")) {
+                raw = raw + " ";
+            }
+            team.setPlayerPrefix(PlaceholderFormatter.translateColors(raw));
         } else {
             team.setPlayerPrefix(Component.literal(""));
         }
+        team.setPlayerSuffix(Component.literal(""));
 
         // Optional name color from LP meta
         if (grade.color() != -1) {
