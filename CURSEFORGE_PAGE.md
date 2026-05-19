@@ -335,16 +335,185 @@ footer_lines = [
 
 <hr style="border: 1px solid #55AA55;">
 
-<p align="center" style="text-align: center; margin-top: 1.2em; margin-bottom: 0.6em;"><span style="font-size: xx-large; color: #55aa55;"><strong>🤝 Official Partner Host</strong></span></p>
-<p style="text-align: center;">Want to host your own modded server with Arcadia Spawn? Our official French partner offers high-performance Minecraft hosting optimized for modpacks.</p>
+<p align="center" style="text-align: center; margin-top: 1.2em; margin-bottom: 0.6em;"><span style="font-size: xx-large; color: #55aa55;"><strong>🤝 Official Hosting Partner</strong></span></p>
+<p style="text-align: center;">Want to run your own modded server with Arcadia Spawn? Our official US / international partner offers high-performance Minecraft hosting optimized for modpacks.</p>
 
 <p>&nbsp;</p>
 
-<p style="text-align: center;"><a href="https://lordhosting.fr/gaming/serveur-minecraft?ref=arcadia" target="_blank" rel="nofollow noopener"><img style="border: 2px solid #55AA55;" src="https://arcadia-echoes-of-power.fr/storage/curseforge/bannerlord.png" alt="LordHosting — Official Partner Host" width="800"></a></p>
+<p style="text-align: center;"><a href="https://wabbanode.com/partner/vyrriox" target="_blank" rel="nofollow noopener"><img style="border: 2px solid #55AA55;" src="https://arcadia-echoes-of-power.fr/storage/curseforge/bannerwab.png" alt="WabbaNode — Official Hosting Partner" width="800"></a></p>
 
 <p>&nbsp;</p>
 
-<p style="text-align: center;"><a href="https://lordhosting.fr/gaming/serveur-minecraft?ref=arcadia" target="_blank" rel="nofollow noopener"><img src="https://img.shields.io/badge/Host_with-LordHosting-55AA55?style=for-the-badge&amp;logo=server&amp;logoColor=white" alt="Host with LordHosting"></a></p>
+<p style="text-align: center;"><a href="https://wabbanode.com/partner/vyrriox" target="_blank" rel="nofollow noopener"><img src="https://img.shields.io/badge/Host_with-WabbaNode-55AA55?style=for-the-badge&amp;logo=server&amp;logoColor=white" alt="Host with WabbaNode"></a></p>
+
+<p>&nbsp;</p>
+
+<hr style="border: 1px solid #55AA55;">
+
+<p>&nbsp;</p>
+
+<h1 style="text-align: center;"><span style="color: #55aa55;">🇫🇷 Description (Français) 🇫🇷</span></h1>
+
+<p style="text-align: center;"><span style="font-size: large;"><strong>🌟 Transformez votre spawn en expérience complète — sans écrire une seule ligne de code. 🌟</strong></span></p>
+
+<p>&nbsp;</p>
+
+<p align="center" style="text-align: center; margin-top: 1.2em; margin-bottom: 0.6em;"><span style="font-size: xx-large; color: #55aa55;"><strong>🤔 Pourquoi Arcadia Spawn ?</strong></span></p>
+
+<table style="margin-left: auto; margin-right: auto; max-width: 950px;">
+<tbody>
+<tr>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>🏠 Dimension Spawn Personnalisée</strong></span><br>La dimension <code>arcadia:spawn</code> est entièrement configurable — biome, couches de blocs, time lock, règles de spawn, hauteur, lumière ambiante, plafond. Plongez vos joueurs dans un monde hub contrôlé.</p>
+</td>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>🚪 Menu Lobby Dynamique</strong></span><br><code>/lobby</code> ouvre un GUI listant chaque warp configuré. Chaque warp a sa propre icône et sa description bilingue. Ajout / édition live via <code>/arcadia_spawn setlobbytp</code>.</p>
+</td>
+</tr>
+<tr>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>🎯 RTP Intelligent</strong></span><br><code>/arcadiartp</code> trouve une position sol sûre dans l'Overworld dans un rayon configurable. Limite par joueur, warmup avec annulation au mouvement, cooldown. Invocable depuis toute dimension.</p>
+</td>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>📋 Tab List Thématique</strong></span><br>Header / footer configurables avec placeholders, codes couleur <code>&amp;</code>, et 7 animations intégrées (<code>scroll</code>, <code>pulse</code>, <code>rainbow</code>, <code>loading</code>, <code>blink</code>, <code>bar</code>, <code>title_color</code>). Refresh ajustable jusqu'à 5 ticks pour des animations fluides.</p>
+</td>
+</tr>
+<tr>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>👑 Tri par Grade LuckPerms</strong></span><br>Les joueurs sont placés dans des équipes Minecraft <code>as_&lt;999-weight&gt;_&lt;groupe&gt;</code> pour que le weight LP le plus haut reste en haut de la tab. Sans LP : fallback op-level propre (Owner → Default). Réagit à <code>UserDataRecalculateEvent</code> pour les promotions instantanées.</p>
+</td>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>👻 Masquage Spectator</strong></span><br>Les joueurs en <code>/gamemode spectator</code> disparaissent de la tab des non-spectateurs. Les autres spectateurs se voient toujours pour coordonner la modération. Server-authoritative via <code>ClientboundPlayerInfoRemovePacket</code>.</p>
+</td>
+</tr>
+<tr>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>🌐 Compteur Cross-Server</strong></span><br>Chaque serveur écrit sa ligne dans une table partagée <code>arcadia_tablist_servers</code> via la DB arcadia-lib, lit les autres, et affiche une ligne par peer dans le footer avec flag ALIVE / STALE. Tout le JDBC async — le main thread ne bloque jamais.</p>
+</td>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>🗺️ Dimensions à la Demande</strong></span><br><code>/arcadia_spawn dimension create &lt;id&gt; [preset] [biome]</code>. Définitions JSON sous <code>config/arcadia/spawn/dimensions/</code> enregistrées au démarrage sous le namespace <code>arcadia_custom:</code>. Presets <code>flat</code>, <code>void</code>, <code>lobby</code>.</p>
+</td>
+</tr>
+<tr>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>🔐 Slot Bypass</strong></span><br>Bypass de slot par permission. Les joueurs avec <code>arcadia_spawn.slots.bypass</code> contournent le slot limit quand le serveur est plein. Faux max-slots dans la liste serveur via mixin, masquage optionnel des messages join / leave.</p>
+</td>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>🛡️ Anti-Corruption</strong></span><br>Écritures JSON atomiques via <code>SafeFileIO</code>, 5 backups rotatifs par fichier, auto-recovery au load. <code>SpawnData</code> valide les dimensions, <code>DimensionType</code> clamp les hauteurs aux limites vanilla. Regex stricte sur les noms de lobby et IDs de dimension (blocklist Windows).</p>
+</td>
+</tr>
+<tr>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>🌐 100% Bilingue EN/FR</strong></span><br>Toutes les chaînes utilisateur passent par <code>LocalizationManager</code> avec traductions EN et FR. Détection par joueur via les infos client — pas de switch manuel.</p>
+</td>
+<td style="padding: 12px 16px; vertical-align: top; width: 50%; border: 1px solid #55AA55; text-align: center;">
+<p><span style="color: #55aa55;"><strong>🔑 Intégration LuckPerms Souple</strong></span><br>Nodes de permission sur chaque sous-commande admin et sur le slot bypass. Tri par weight + rendu du préfixe quand LP est installé. Fallback silencieux sur les checks OP vanilla en son absence.</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+<p>&nbsp;</p>
+
+<p align="center" style="text-align: center; margin-top: 1.2em; margin-bottom: 0.6em;"><span style="font-size: xx-large; color: #55aa55;"><strong>🎮 Comment l'utiliser</strong></span></p>
+<p style="text-align: center;">C'est <strong>vraiment</strong> aussi simple :</p>
+
+<table style="margin-left: auto; margin-right: auto; max-width: 800px;">
+<tbody>
+<tr>
+<td style="padding: 10px 14px; vertical-align: top; width: 50%; border: 1px solid #55AA55;">
+<p><span style="color: #55aa55;"><strong>1️⃣</strong></span> Posez le jar dans <code>mods/</code> et démarrez le serveur. Les configs se génèrent.</p>
+</td>
+<td style="padding: 10px 14px; vertical-align: top; width: 50%; border: 1px solid #55AA55;">
+<p><span style="color: #55aa55;"><strong>2️⃣</strong></span> Réglez <code>config.toml</code> pour la dimension. Passez <code>tablist.toml &gt; enabled = true</code> pour activer la tab list.</p>
+</td>
+</tr>
+<tr>
+<td style="padding: 10px 14px; vertical-align: top; width: 50%; border: 1px solid #55AA55;">
+<p><span style="color: #55aa55;"><strong>3️⃣</strong></span> Lancez <code>/arcadia_spawn setspawn</code>, <code>/arcadia_spawn setlobbytp hub</code> — vos warps sont en place.</p>
+</td>
+<td style="padding: 10px 14px; vertical-align: top; width: 50%; border: 1px solid #55AA55;">
+<p><span style="color: #55aa55;"><strong>4️⃣</strong></span> Les joueurs tapent <code>/lobby</code>, <code>/spawn</code>, <code>/arcadiartp</code>. Tab. Profitez de la tab list triée par grade et animée. Terminé.</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+<p>&nbsp;</p>
+
+<hr style="border: 1px solid #55AA55;">
+
+<p align="center" style="text-align: center; margin-top: 1.2em; margin-bottom: 0.6em;"><span style="font-size: xx-large; color: #55aa55;"><strong>📦 Prérequis</strong></span></p>
+
+<table style="margin-left: auto; margin-right: auto; max-width: 700px; border-collapse: collapse;">
+<thead>
+<tr style="background-color: rgba(85, 170, 85, 0.18);">
+<th style="text-align: center; padding: 10px 24px; border: 1px solid #55AA55;"><span style="color: #55aa55;">Dépendance</span></th>
+<th style="text-align: center; padding: 10px 24px; border: 1px solid #55AA55;"><span style="color: #55aa55;">Version</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;"><strong>Minecraft</strong></td>
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;">1.21.1</td>
+</tr>
+<tr style="background-color: rgba(85, 170, 85, 0.10);">
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;"><strong>NeoForge</strong></td>
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;">21.1.219+</td>
+</tr>
+<tr>
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;"><strong>Java</strong></td>
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;">21</td>
+</tr>
+<tr style="background-color: rgba(85, 170, 85, 0.10);">
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;"><strong>Arcadia Lib</strong></td>
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;">inclus dans le jar</td>
+</tr>
+<tr>
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;"><strong>LuckPerms</strong></td>
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;">optionnel (intégration souple)</td>
+</tr>
+</tbody>
+</table>
+
+<p>&nbsp;</p>
+
+<p style="text-align: center;"><em>Arcadia Lib est livrée à l'intérieur du jar — aucun téléchargement séparé. LuckPerms est totalement optionnel ; le mod retombe sur les checks OP vanilla en son absence.</em></p>
+
+<p>&nbsp;</p>
+
+<hr style="border: 1px solid #55AA55;">
+
+<p align="center" style="text-align: center; margin-top: 1.2em; margin-bottom: 0.6em;"><span style="font-size: xx-large; color: #55aa55;"><strong>🐛 Bugs &amp; Support</strong></span></p>
+<p style="text-align: center;">Vous avez un crash ou un comportement inattendu ? On veut bien le savoir.</p>
+
+<p style="text-align: center;"><a href="https://github.com/Team-Arcadia/Arcadia-Spawn-Dimension/issues/new" target="_blank" rel="nofollow noopener"><img src="https://img.shields.io/badge/Signaler_un_bug-Issue_GitHub-d73a49?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Signaler un bug"></a>&nbsp; &nbsp;<a href="https://discord.gg/xjF8Rtzyd4" target="_blank" rel="nofollow noopener"><img src="https://img.shields.io/badge/Demander_sur-Discord-5865F2?style=for-the-badge&amp;logo=discord&amp;logoColor=white" alt="Discord"></a></p>
+
+<p style="text-align: center;"><em>Merci d'inclure votre log de crash complet, vos versions d'Arcadia Spawn et NeoForge, le JSON de la dimension / config concernée le cas échéant, ainsi que des étapes claires pour reproduire.</em></p>
+
+<p>&nbsp;</p>
+
+<hr style="border: 1px solid #55AA55;">
+
+<p align="center" style="text-align: center; margin-top: 1.2em; margin-bottom: 0.6em;"><span style="font-size: xx-large; color: #55aa55;"><strong>🤝 Contribuer</strong></span></p>
+<p style="text-align: center;">Issues, suggestions et signalements de bugs sont les bienvenus sur le tracker public.</p>
+
+<p style="text-align: center;"><a href="https://github.com/Team-Arcadia/Arcadia-Spawn-Dimension" target="_blank" rel="nofollow noopener"><img src="https://img.shields.io/badge/Star_sur-GitHub-55AA55?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Star sur GitHub"></a>&nbsp; &nbsp;<a href="https://github.com/Team-Arcadia/Arcadia-Spawn-Dimension/blob/main/CHANGELOG.md" target="_blank" rel="nofollow noopener"><img src="https://img.shields.io/badge/Changelog-Parchemin-orange?style=for-the-badge&amp;logo=readme&amp;logoColor=white" alt="Changelog"></a></p>
+
+<p>&nbsp;</p>
+
+<hr style="border: 1px solid #55AA55;">
+
+<p align="center" style="text-align: center; margin-top: 1.2em; margin-bottom: 0.6em;"><span style="font-size: xx-large; color: #55aa55;"><strong>🤝 Hébergeur Officiel Partenaire</strong></span></p>
+<p style="text-align: center;">Vous souhaitez héberger votre propre serveur moddé avec Arcadia Spawn ? Notre partenaire officiel français propose un hébergement Minecraft haute performance optimisé pour les modpacks.</p>
+
+<p>&nbsp;</p>
+
+<p style="text-align: center;"><a href="https://lordhosting.fr/gaming/serveur-minecraft?ref=arcadia" target="_blank" rel="nofollow noopener"><img style="border: 2px solid #55AA55;" src="https://arcadia-echoes-of-power.fr/storage/curseforge/bannerlord.png" alt="LordHosting — Hébergeur Officiel Partenaire" width="800"></a></p>
+
+<p>&nbsp;</p>
+
+<p style="text-align: center;"><a href="https://lordhosting.fr/gaming/serveur-minecraft?ref=arcadia" target="_blank" rel="nofollow noopener"><img src="https://img.shields.io/badge/Heberger_avec-LordHosting-55AA55?style=for-the-badge&amp;logo=server&amp;logoColor=white" alt="Héberger avec LordHosting"></a></p>
 
 <p>&nbsp;</p>
 
