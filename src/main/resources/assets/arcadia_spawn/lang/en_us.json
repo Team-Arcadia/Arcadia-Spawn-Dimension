@@ -41,5 +41,9 @@
     "arcadia_spawn.command.dimension.deleted": "Dimension '%s' deleted.",
     "arcadia_spawn.command.dimension.not_found": "No such custom dimension: '%s'.",
     "arcadia_spawn.command.dimension.list_header": "Custom dimensions (%s):",
-    "arcadia_spawn.command.dimension.list_empty": "No custom dimensions registered yet."
+    "arcadia_spawn.command.dimension.list_empty": "No custom dimensions registered yet.",
+
+    "arcadia_spawn.command.tablist.reload": "Tab list refreshed for %s player(s).",
+    "arcadia_spawn.command.tablist.disabled": "Tab list is disabled — enable it in config/arcadia/spawn/tablist.toml.",
+    "arcadia_spawn.command.tablist.no_db": "Cross-server requires arcadia-lib database to be enabled."
 }

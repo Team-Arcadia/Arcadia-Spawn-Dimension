@@ -5,6 +5,8 @@ import com.arcadia.spawn.commands.SpawnCommands;
 import com.arcadia.spawn.commands.DebugCommands;
 import com.arcadia.spawn.commands.TeleportHelper;
 import com.arcadia.spawn.config.SpawnConfig;
+import com.arcadia.spawn.tablist.LuckPermsListener;
+import com.arcadia.spawn.tablist.TabListManager;
 import com.arcadia.spawn.util.RateLimiter;
 import com.arcadia.spawn.world.SpawnData;
 import net.minecraft.core.registries.Registries;
@@ -17,6 +19,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.Set;
@@ -51,11 +55,16 @@ public class ModEvents {
                 }
             }
         }
+
+        // TabList: sync team + send header/footer immediately so the player
+        // doesn't see vanilla tab for a tick before the refresh.
+        TabListManager.onPlayerJoin(player);
     }
 
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
         TeleportHelper.tick();
+        TabListManager.tick(event.getServer());
     }
 
     @SubscribeEvent
@@ -64,6 +73,18 @@ public class ModEvents {
             TeleportHelper.onDisconnect(player.getUUID());
             RateLimiter.onDisconnect(player.getUUID());
         }
+    }
+
+    @SubscribeEvent
+    public static void onServerStarted(ServerStartedEvent event) {
+        // Hot-attach the LuckPerms listener once the server is up so we react
+        // to /lp parent set, /lp group <g> setweight, etc. Safe no-op without LP.
+        LuckPermsListener.tryAttach();
+    }
+
+    @SubscribeEvent
+    public static void onServerStopping(ServerStoppingEvent event) {
+        TabListManager.onShutdown();
     }
 
     @SubscribeEvent

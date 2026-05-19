@@ -31,6 +31,7 @@ public final class PermissionRegistry {
     public static final PermissionNode<Boolean> CMD_DIM_CREATE = node("command.dimension.create", 4);
     public static final PermissionNode<Boolean> CMD_DIM_DELETE = node("command.dimension.delete", 4);
     public static final PermissionNode<Boolean> CMD_DIM_LIST = node("command.dimension.list", 2);
+    public static final PermissionNode<Boolean> CMD_TABLIST = node("command.tablist", 2);
 
     private static PermissionNode<Boolean> node(String path, int opLevel) {
         return new PermissionNode<>(
@@ -45,9 +46,10 @@ public final class PermissionRegistry {
         event.addNodes(
                 CMD_RELOAD, CMD_SETLOBBYTP, CMD_DELLOBBYTP, CMD_EDIT,
                 CMD_TP, CMD_SETSPAWN, CMD_DEBUG,
-                CMD_DIM_CREATE, CMD_DIM_DELETE, CMD_DIM_LIST
+                CMD_DIM_CREATE, CMD_DIM_DELETE, CMD_DIM_LIST,
+                CMD_TABLIST
         );
-        ArcadiaSpawnMod.LOGGER.info("Arcadia Spawn permission nodes registered ({} nodes).", 10);
+        ArcadiaSpawnMod.LOGGER.info("Arcadia Spawn permission nodes registered ({} nodes).", 11);
     }
 
     /**

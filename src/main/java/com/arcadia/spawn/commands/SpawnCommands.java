@@ -7,6 +7,9 @@ import com.arcadia.spawn.lobby.LobbyLocation;
 import com.arcadia.spawn.lobby.LobbyManager;
 import com.arcadia.spawn.lobby.LobbyMenu;
 import com.arcadia.spawn.lobby.LocalizationManager;
+import com.arcadia.spawn.tablist.CrossServerDb;
+import com.arcadia.spawn.tablist.TabListConfig;
+import com.arcadia.spawn.tablist.TabListManager;
 import com.arcadia.spawn.util.InputValidation;
 import com.arcadia.spawn.util.RateLimiter;
 import com.arcadia.spawn.world.CustomDimensionDef;
@@ -124,6 +127,13 @@ public class SpawnCommands {
                         .then(Commands.literal("list")
                                 .requires(PermissionRegistry.require(PermissionRegistry.CMD_DIM_LIST, 2))
                                 .executes(SpawnCommands::listDimensions)))
+
+                // ── tablist subcommands (NEW in 1.5.3) ──
+                .then(Commands.literal("tablist")
+                        .requires(PermissionRegistry.require(PermissionRegistry.CMD_TABLIST, 2))
+                        .then(Commands.literal("reload").executes(SpawnCommands::tablistReload))
+                        .then(Commands.literal("status").executes(SpawnCommands::tablistStatus))
+                        .then(Commands.literal("peers").executes(SpawnCommands::tablistPeers)))
         );
 
         dispatcher.register(Commands.literal("lobby")
@@ -385,6 +395,69 @@ public class SpawnCommands {
         }
         source.sendFailure(Component.literal("Failed to delete dimension. See logs.").withStyle(ChatFormatting.RED));
         return 0;
+    }
+
+    // ── TabList admin ───────────────────────────────────────────────────────
+
+    private static int tablistReload(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        // Re-apply to all currently online players. Config is reloaded automatically
+        // by NeoForge when the toml file is edited; this just forces the refresh tick.
+        TabListManager.tick(source.getServer());
+        for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
+            TabListManager.onPlayerJoin(player);
+        }
+        source.sendSuccess(() -> Component.literal("TabList refreshed for " +
+                source.getServer().getPlayerList().getPlayerCount() + " player(s).")
+                .withStyle(ChatFormatting.GREEN), true);
+        return 1;
+    }
+
+    private static int tablistStatus(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        source.sendSuccess(() -> Component.literal("─── TabList Status ───")
+                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        source.sendSuccess(() -> Component.literal("  Enabled: " + TabListConfig.VALUES.enabled.get())
+                .withStyle(ChatFormatting.GRAY), false);
+        source.sendSuccess(() -> Component.literal("  Group sorting: " + TabListConfig.VALUES.groupSortingEnabled.get())
+                .withStyle(ChatFormatting.GRAY), false);
+        source.sendSuccess(() -> Component.literal("  LuckPerms detected: " + com.arcadia.spawn.tablist.GradeResolver.hasLuckPerms())
+                .withStyle(ChatFormatting.GRAY), false);
+        source.sendSuccess(() -> Component.literal("  Cross-server: " + TabListConfig.VALUES.crossServerEnabled.get() +
+                " (DB " + (CrossServerDb.isAvailable() ? "available" : "not available") + ")")
+                .withStyle(ChatFormatting.GRAY), false);
+        source.sendSuccess(() -> Component.literal("  This server id: " + CrossServerDb.localServerId())
+                .withStyle(ChatFormatting.GRAY), false);
+        return 1;
+    }
+
+    private static int tablistPeers(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        if (!CrossServerDb.isAvailable()) {
+            source.sendFailure(Component.literal("arcadia-lib DB is not active. Enable it in arcadia-lib config.")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+        long timeoutMs = TabListConfig.VALUES.peerTimeoutSeconds.get() * 1000L;
+        CrossServerDb.fetchPeers(timeoutMs).thenAccept(peers -> source.getServer().execute(() -> {
+            source.sendSuccess(() -> Component.literal("─── Peer Servers (" + peers.size() + ") ───")
+                    .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+            if (peers.isEmpty()) {
+                source.sendSuccess(() -> Component.literal("  (no rows in shared DB yet)")
+                        .withStyle(ChatFormatting.GRAY), false);
+                return;
+            }
+            for (CrossServerDb.PeerSnapshot p : peers) {
+                String tag = p.alive() ? "[ALIVE]" : "[STALE]";
+                ChatFormatting color = p.alive() ? ChatFormatting.GREEN : ChatFormatting.RED;
+                source.sendSuccess(() -> Component.literal(String.format(
+                        "  %s %-14s %d/%d  display=%s",
+                        tag, p.serverId(), p.online(), p.max(),
+                        (p.displayName() == null || p.displayName().isBlank()) ? "-" : p.displayName()))
+                        .withStyle(color), false);
+            }
+        }));
+        return 1;
     }
 
     private static int listDimensions(CommandContext<CommandSourceStack> ctx) {

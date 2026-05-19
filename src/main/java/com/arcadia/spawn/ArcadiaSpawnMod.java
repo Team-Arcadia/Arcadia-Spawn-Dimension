@@ -2,6 +2,7 @@ package com.arcadia.spawn;
 
 import com.arcadia.lib.ArcadiaModRegistry;
 import com.arcadia.lib.client.ArcadiaModCard;
+import com.arcadia.lib.data.DatabaseManager;
 import com.arcadia.spawn.config.SlotBypassConfig;
 import com.arcadia.spawn.config.SpawnConfig;
 import com.arcadia.spawn.lobby.LobbyManager;
@@ -10,6 +11,8 @@ import com.arcadia.spawn.network.C2SOpenLobby;
 import com.arcadia.spawn.network.SpawnNetworking;
 import com.arcadia.spawn.registry.AttachmentRegistry;
 import com.arcadia.spawn.registry.SpawnModMenus;
+import com.arcadia.spawn.tablist.CrossServerDb;
+import com.arcadia.spawn.tablist.TabListConfig;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -30,6 +33,17 @@ public class ArcadiaSpawnMod {
 
         modContainer.registerConfig(ModConfig.Type.SERVER,
                 SlotBypassConfig.SPEC, "arcadia/spawn/slot_bypass.toml");
+
+        modContainer.registerConfig(ModConfig.Type.SERVER,
+                TabListConfig.SPEC, "arcadia/spawn/tablist.toml");
+
+        // Register our cross-server table with arcadia-lib's DatabaseManager.
+        // Safe to call before DB init — DatabaseManager queues table registrations.
+        try {
+            DatabaseManager.registerTables(CrossServerDb.INSTANCE);
+        } catch (Throwable t) {
+            LOGGER.warn("Could not register tablist table with arcadia-lib: {}", t.getMessage());
+        }
 
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(SpawnNetworking::onRegisterPayloads);

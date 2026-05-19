@@ -222,3 +222,7 @@ ls libs/arcadia-lib-*.jar
 17. Custom dimensions live under `arcadia_custom:*` ONLY. The `arcadia:` namespace is reserved for built-in
 18. Permission nodes are declared in `PermissionRegistry` — add new admin commands there with their op-level fallback
 19. All player-callable commands should consider a `RateLimiter.tryAcquire()` guard if they open GUIs or trigger expensive work
+20. Tab list code is in `com.arcadia.spawn.tablist` — `TabListConfig` is SERVER, `tablist_enabled` must default to false for backward compat
+21. Cross-server features re-use arcadia-lib's `DatabaseManager` — never open a separate JDBC connection from this mod
+22. All DB queries MUST go through `DatabaseManager.executeAsync` / `supplyAsync` — never block the main server thread on JDBC
+23. LuckPerms references in the tablist package are isolated behind `GradeResolver`/`LuckPermsListener` inner-class loaders so the mod still loads without LP on the classpath

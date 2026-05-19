@@ -47,6 +47,8 @@ Arcadia Spawn is a feature-rich spawn dimension manager designed for the Arcadia
 | **Dimension-Aware Spawn** | Spawn point stores dimension ID — works across any dimension |
 | **Respawn Control** | Configurable respawn to spawn point when player has no bed/anchor |
 | **Custom Dimensions** | Create/list/delete user dimensions under `arcadia_custom:*` (1.5.3+) |
+| **Custom Tab List** | Themed header/footer, rank sorting by LuckPerms weight, op-level fallback (1.5.3+) |
+| **Cross-Server Network** | Tab footer shows player counts across all servers via shared arcadia-lib DB (1.5.3+) |
 | **Anti-Corruption** | Atomic writes, rotated backups, NBT validation, auto-recovery on load failure |
 | **Optimized** | Zero tick handlers, O(1) lobby lookups, ThreadLocalRandom RTP, event-driven only |
 
@@ -72,6 +74,9 @@ Arcadia Spawn is a feature-rich spawn dimension manager designed for the Arcadia
 | `dimension create <id> [preset] [biome]` | Op Level 4 | Create a new custom dimension (`arcadia_custom:<id>`). Restart required. |
 | `dimension delete <id> [purge]` | Op Level 4 | Delete a custom dimension definition. `purge=true` writes a cleanup marker. |
 | `dimension list` | Op Level 2 | List all custom dimensions and their load status |
+| `tablist reload` | Op Level 2 | Force re-apply the tab list header/footer to all online players |
+| `tablist status` | Op Level 2 | Show tab list state (enabled, LP detected, DB available, server id) |
+| `tablist peers` | Op Level 2 | List all cross-server rows in the shared DB with ALIVE/STALE flags |
 
 ### Debug Commands (`/arcadia_spawn debug`)
 | Command | Description |
