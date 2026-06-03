@@ -27,6 +27,11 @@ import net.minecraft.world.phys.Vec3;
 import java.util.List;
 
 public class LobbyMenu extends AbstractContainerMenu {
+    /** First container slot used for a clickable lobby icon. */
+    private static final int FIRST_LOBBY_SLOT = 10;
+    /** Maximum number of lobby icons rendered (slots 10..16). */
+    private static final int MAX_LOBBY_ICONS = 7;
+
     private final Container container;
     private final List<LobbyLocation> locations;
 
@@ -59,9 +64,9 @@ public class LobbyMenu extends AbstractContainerMenu {
             }
 
             // Place lobby items in center area
-            int slotIndex = 10; // Start at row 2, col 2
+            int slotIndex = FIRST_LOBBY_SLOT; // Start at row 2, col 2
             for (LobbyLocation loc : locations) {
-                if (slotIndex > 16) break; // Max 7 items in center row
+                if (slotIndex >= FIRST_LOBBY_SLOT + MAX_LOBBY_ICONS) break; // Max 7 items in center row
 
                 Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(loc.item()));
                 if (item == Items.AIR) item = Items.PAPER;
@@ -113,9 +118,12 @@ public class LobbyMenu extends AbstractContainerMenu {
     public void clicked(int slotId, int button, ClickType clickType, Player player) {
         if (slotId >= 0 && slotId < 27) {
             if (player instanceof ServerPlayer serverPlayer) {
-                // Find which lobby location was clicked
-                int lobbyIndex = slotId - 10;
-                if (lobbyIndex >= 0 && lobbyIndex < locations.size()) {
+                // Only the rendered icon slots (10..16) are clickable. Without the
+                // MAX_LOBBY_ICONS bound, clicks on the decorative glass panes at
+                // slots 17-26 would teleport to never-rendered locations when 8+
+                // lobbies are configured.
+                int lobbyIndex = slotId - FIRST_LOBBY_SLOT;
+                if (lobbyIndex >= 0 && lobbyIndex < MAX_LOBBY_ICONS && lobbyIndex < locations.size()) {
                     teleportPlayer(serverPlayer, locations.get(lobbyIndex));
                 }
             }

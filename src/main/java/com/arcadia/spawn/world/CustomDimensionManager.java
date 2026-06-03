@@ -83,6 +83,10 @@ public final class CustomDimensionManager {
     }
 
     private static void loadOne(Path file) {
+        loadOne(file, 0);
+    }
+
+    private static void loadOne(Path file, int attempt) {
         try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(file), StandardCharsets.UTF_8)) {
             CustomDimensionDef def = GSON.fromJson(reader, CustomDimensionDef.class);
             if (def == null || def.id == null) {
@@ -97,13 +101,19 @@ public final class CustomDimensionManager {
         } catch (Exception e) {
             ArcadiaSpawnMod.LOGGER.error("Failed to load dimension file {}", file.getFileName(), e);
 
-            // Auto-recovery from backup
+            // Auto-recovery from backup — single retry only. findLatestBackup always
+            // returns the same newest .bak, so if that backup is ALSO corrupt this
+            // would recurse forever (StackOverflowError). Cap at one attempt.
+            if (attempt >= 1) {
+                ArcadiaSpawnMod.LOGGER.error("Backup recovery exhausted for {}, skipping.", file.getFileName());
+                return;
+            }
             java.io.File backup = SafeFileIO.findLatestBackup(file);
             if (backup != null) {
                 ArcadiaSpawnMod.LOGGER.warn("Attempting recovery from backup {}", backup.getName());
                 try {
                     Files.copy(backup.toPath(), file, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                    loadOne(file);
+                    loadOne(file, attempt + 1);
                 } catch (IOException io) {
                     ArcadiaSpawnMod.LOGGER.error("Backup recovery failed for {}", file.getFileName(), io);
                 }
@@ -139,12 +149,13 @@ public final class CustomDimensionManager {
     private static DimensionType buildDimensionType(CustomDimensionDef def) {
         int height = clampHeight(def.height);
         int logicalHeight = Math.min(def.logicalHeight, height);
+        int minY = DimensionRegistry.clampMinY(def.minY, height);
 
         return new DimensionType(
                 def.timeLocked ? OptionalLong.of(def.fixedTime) : OptionalLong.empty(),
                 def.hasSkylight, def.hasCeiling, def.ultrawarm, def.natural,
                 def.coordinateScale, def.bedWorks, def.respawnAnchorWorks,
-                def.minY, height, logicalHeight,
+                minY, height, logicalHeight,
                 TagKey.create(Registries.BLOCK, ResourceLocation.parse(def.infiniburn)),
                 ResourceLocation.parse(def.effects),
                 (float) def.ambientLight,

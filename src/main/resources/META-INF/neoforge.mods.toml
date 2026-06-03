@@ -1,11 +1,11 @@
 modLoader="javafml"
 loaderVersion="[4,)"
-license="All rights reserved"
-issueTrackerURL=""
+license="LGPL-3.0-or-later"
+issueTrackerURL="https://github.com/Team-Arcadia/Arcadia-Spawn-Dimension/issues"
 
 [[mods]]
 modId="arcadia_spawn"
-version="1.5.0"
+version="${mod_version}"
 displayName="Arcadia Spawn"
 authors="vyrriox, Team Arcadia"
 description='''

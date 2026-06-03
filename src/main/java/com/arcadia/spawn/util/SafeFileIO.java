@@ -67,8 +67,11 @@ public final class SafeFileIO {
         if (backups == null || backups.length <= MAX_BACKUPS) return;
         Arrays.sort(backups, Comparator.comparingLong(File::lastModified).reversed());
         for (int i = MAX_BACKUPS; i < backups.length; i++) {
-            //noinspection ResultOfMethodCallIgnored
-            backups[i].delete();
+            if (!backups[i].delete()) {
+                // Best-effort cleanup; surface persistent failures (permissions / file
+                // lock) so a growing backups/ directory is diagnosable.
+                ArcadiaSpawnMod.LOGGER.warn("Could not delete old backup: {}", backups[i]);
+            }
         }
     }
 

@@ -81,6 +81,16 @@ public class RTPCommand {
         TeleportHelper.teleportWithWarmup(player, target, level, warmup, cooldownMs, "rtp");
     }
 
+    /**
+     * Maximum number of chunks this command may force-generate on the server thread
+     * per invocation. Random candidates in unexplored terrain require a blocking
+     * chunk load+generate; without a cap a single /arcadiartp could generate dozens
+     * of distant chunks on the main thread and freeze the server for seconds.
+     * Already-loaded chunks are always evaluated (zero cost) regardless of this cap.
+     */
+    private static final int MAX_FORCED_CHUNK_LOADS = 8;
+
+    /** Returns a safe position, or {@code null} when no safe spot was found (caller reports failure). */
     private static BlockPos findRandomSafePos(ServerLevel level, int maxAttempts) {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
         int radius = SpawnConfig.COMMON.rtpRadius.get();
@@ -90,12 +100,22 @@ public class RTPCommand {
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         BlockPos.MutableBlockPos below = new BlockPos.MutableBlockPos();
 
+        int forcedLoads = 0;
         for (int attempts = 0; attempts < maxAttempts; attempts++) {
             int x = rand.nextInt(-radius, radius + 1);
             int z = rand.nextInt(-radius, radius + 1);
+            int cx = x >> 4, cz = z >> 4;
 
-            level.getChunk(x >> 4, z >> 4);
+            // Prefer already-loaded chunks (no stall). Only force-generate up to
+            // MAX_FORCED_CHUNK_LOADS chunks so the server thread can't freeze.
+            if (level.getChunkSource().getChunkNow(cx, cz) == null) {
+                if (forcedLoads >= MAX_FORCED_CHUNK_LOADS) continue;
+                forcedLoads++;
+                level.getChunk(cx, cz); // bounded blocking load+generate
+            }
 
+            // The chunk is now resident, so getHeight/getFluidState/getBlockState
+            // below won't trigger any additional blocking load.
             int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
             if (y < minBuild || y > maxBuild) continue;
 
@@ -108,6 +128,8 @@ public class RTPCommand {
             return cursor.immutable();
         }
 
-        return new BlockPos(0, level.getHeight(Heightmap.Types.WORLD_SURFACE, 0, 0), 0);
+        // No safe position found — signal failure so the caller shows the localized
+        // "fail_safe" message instead of silently teleporting the player to (0,0,0).
+        return null;
     }
 }

@@ -1,3 +1,60 @@
+# Arcadia Spawn — Technical Audit Report (v1.5.4)
+
+**Date:** 2026-06-03  
+**Version:** 1.5.4  
+**Author:** vyrriox  
+**Scope:** Full bug + performance audit of all 41 source files (~4,700 LOC). 28 candidate
+findings were raised and independently, adversarially re-verified; 10 were confirmed and
+fixed, 18 were rejected as false positives or non-issues.
+
+## Confirmed & Fixed
+
+| # | Area | Severity | Issue | Fix |
+|---|------|----------|-------|-----|
+| 1 | Tab list / collisions | **CRITICAL (regression)** | Grade-sorting teams created with `CollisionRule.NEVER` disabled all player↔player and player↔entity pushing. | Default `ALWAYS`, re-applied every sync (repairs `scoreboard.dat`), new `collision_rule` option. |
+| 2 | RTP | HIGH | `findRandomSafePos()` returned a hardcoded `(0,0,0)` column on total failure, bypassing safety checks. | Return `null`; caller already shows the localized failure message. |
+| 3 | Dimensions | MEDIUM | `min_y` passed to `DimensionType` unclamped → crash at load on extreme values. | Snap to multiple of 16 + clamp to MC limits in both build paths. |
+| 4 | RTP | MEDIUM (perf) | Blocking `getChunk()` per attempt could freeze the server for seconds. | Evaluate loaded chunks free (`getChunkNow`); cap forced generation at 8/call. |
+| 5 | Dimensions | MEDIUM | Unbounded recursion in `loadOne()` backup recovery → `StackOverflowError`. | Cap recovery at a single retry. |
+| 6 | Teleport | LOW | `NumberFormatException` on bad LuckPerms meta swallowed silently. | Catch + warn, keep default fallback. |
+| 7 | Lobby | LOW | Lobby files keyed by dimension *path* only → cross-namespace collision. | Namespaced filenames + full-key filter + auto-migration. |
+| 8 | i18n | LOW | `String.format` failures returned the raw template with no log. | Warn on failure, keep fallback. |
+| 9 | Lobby menu | LOW | Clicks bound to `locations.size()`, not the 7 icon slots → phantom TP with 8+ lobbies. | Bind clicks to slots 10–16. |
+| 10 | File IO | LOW | `File.delete()` return ignored → silent backup-rotation failures. | Log on delete failure. |
+
+## Reviewed — intentionally unchanged
+
+- **`CrossServerDb.cleanup()` runs synchronous JDBC on the shutdown thread.** Verified: this
+  is correct. The synchronous `DELETE` *guarantees* this server's row is removed before the
+  process exits; making it fire-and-forget (`executeAsync`) would race the JVM exit and
+  frequently drop the cleanup. It is gated by `isAvailable()` and is a single primary-key
+  delete, so the worst case is a sub-second stall at shutdown only. Left as-is.
+
+## Build verification
+
+`./gradlew compileJava` and `./gradlew jar` both succeed (only pre-existing
+`EventBusSubscriber.Bus` deprecation warnings). `neoforge.mods.toml` now reports the correct
+version, expanded from Gradle at `processResources`.
+
+---
+
+# Rapport d'Audit — Arcadia Spawn (v1.5.4)
+
+**Date :** 2026-06-03  
+**Version :** 1.5.4  
+**Auteur :** vyrriox  
+**Portée :** Audit complet bugs + performance des 41 fichiers source (~4 700 lignes).
+28 findings candidats ont été levés puis re-vérifiés de façon indépendante et adversariale ;
+10 confirmés et corrigés, 18 rejetés (faux positifs ou non-problèmes). Détail des correctifs
+dans le tableau anglais ci-dessus et dans le [CHANGELOG](CHANGELOG.md) 1.5.4.
+
+**Revu — laissé inchangé :** `CrossServerDb.cleanup()` exécute du JDBC synchrone au shutdown.
+Vérifié comme **correct** : le `DELETE` synchrone garantit la suppression de la ligne de ce
+serveur avant la fin du process ; le passer en fire-and-forget perdrait souvent le nettoyage
+(course avec l'arrêt de la JVM). Gardé tel quel.
+
+---
+
 # Arcadia Spawn — Technical Audit Report
 
 **Date:** 2026-04-14  

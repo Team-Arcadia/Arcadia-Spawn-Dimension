@@ -12,7 +12,7 @@ Arcadia Spawn is a NeoForge Minecraft mod that turns the spawn experience into a
 - **Random Teleport** — `/arcadiartp` finds a safe ground position in the Overworld within a configurable radius. Usage cap per player, warmup with movement cancel, cooldown — all configurable. Callable from any dimension.
 - **Dimension-aware spawn** — `/arcadia_spawn setspawn` stores both the coordinates AND the dimension key. `/spawn` always teleports to the right dimension. First join + bedless respawn redirect to spawn when configured.
 - **Custom tab list** — Themed header / footer with placeholders (`%server%`, `%online%`, `%tps%`, `%player_ping%`, `%player_playtime%`, `%lp_group%`, `%cross_total%`, `%peers%`), `&`-style color codes, and built-in animations (`%anim_scroll%`, `%anim_pulse%`, `%anim_rainbow%`, `%anim_loading%`, `%anim_blink%`, `%anim_title_color%`, `%anim_bar%`). Refresh interval and templates fully configurable.
-- **Grade sorting (LuckPerms or OP fallback)** — Players are bucketed into Minecraft `PlayerTeam`s named `as_<999-weight>_<group>` so the highest LuckPerms weight always sits at the top of the tab. Without LuckPerms: falls back to vanilla op-level grades (Owner → Default). Listens to LuckPerms `UserDataRecalculateEvent` for instant promotion / demotion refresh.
+- **Grade sorting (LuckPerms or OP fallback)** — Players are bucketed into Minecraft `PlayerTeam`s named `as_<999-weight>_<group>` so the highest LuckPerms weight always sits at the top of the tab. Without LuckPerms: falls back to vanilla op-level grades (Owner → Default). Listens to LuckPerms `UserDataRecalculateEvent` for instant promotion / demotion refresh. The sorting teams keep vanilla player/entity collisions (`collision_rule = ALWAYS` by default; configurable).
 - **Spectator hide** — Players in `/gamemode spectator` are hidden from the tab list of non-spectators. Other spectators still see each other so co-moderation works. Server-authoritative, opt-in via config (default on).
 - **Hide ping icons** — Client-side mixin cancels the rendering of the latency signal-bar icons next to player names for a cleaner tab. Opt-in via config.
 - **Cross-server player count** — When `cross_server_enabled = true` and the arcadia-lib database is reachable, every server heartbeats its row into a shared `arcadia_tablist_servers` table and reads the others. The `%peers%` footer line auto-expands into one row per server with ALIVE / STALE flags. Stale peers (no heartbeat for `peer_timeout_seconds`) are rendered as offline. All JDBC goes through `DatabaseManager.executeAsync` — the main server thread never blocks.
@@ -171,7 +171,7 @@ Every server runs an UPSERT heartbeat into its own row every `heartbeat_interval
 
 ## Installation
 
-1. Place `arcadia_spawn-1.5.3.jar` in your `mods/` folder. Arcadia Lib is bundled inside.
+1. Place `arcadia_spawn-1.5.4.jar` in your `mods/` folder. Arcadia Lib is bundled inside.
 2. (Optional) Install [LuckPerms](https://luckperms.net/) for permission-based features and weight-driven grade sorting.
 3. Start the server. On first launch, the mod creates `config/arcadia/spawn/config.toml`, `slot_bypass.toml`, `tablist.toml`, and the `lobbies/` folder.
 4. Edit `config.toml` to tune the dimension. Edit `tablist.toml` and set `enabled = true` to activate the custom tab list. Run `/arcadia_spawn reload` to apply lobby changes live.
@@ -207,7 +207,7 @@ Arcadia Spawn est un mod Minecraft NeoForge qui transforme l'expérience de spaw
 - **Téléport Aléatoire** — `/arcadiartp` trouve une position sol sûre dans l'Overworld dans un rayon configurable. Limite d'utilisations par joueur, warmup avec annulation au mouvement, cooldown. Invocable depuis toute dimension.
 - **Spawn par dimension** — `/arcadia_spawn setspawn` stocke les coordonnées ET la clé de dimension. `/spawn` téléporte toujours dans la bonne dimension. Premier login + respawn sans lit redirigent vers le spawn quand configuré.
 - **Tab list personnalisée** — Header / footer thématiques avec placeholders et animations intégrées. Refresh et templates entièrement configurables.
-- **Tri par grade (LuckPerms ou OP fallback)** — Les joueurs sont placés dans des `PlayerTeam` Minecraft pour que le weight LuckPerms le plus haut apparaisse en haut de la tab. Sans LuckPerms : fallback op-level (Owner → Default).
+- **Tri par grade (LuckPerms ou OP fallback)** — Les joueurs sont placés dans des `PlayerTeam` Minecraft pour que le weight LuckPerms le plus haut apparaisse en haut de la tab. Sans LuckPerms : fallback op-level (Owner → Default). Les teams de tri conservent les collisions vanilla joueur/entité (`collision_rule = ALWAYS` par défaut ; configurable).
 - **Masquage spectator** — Les joueurs en `/gamemode spectator` sont masqués de la tab des non-spectateurs. Les autres spectateurs se voient mutuellement.
 - **Masquage des icônes de ping** — Mixin client qui supprime l'affichage des barres de signal pour une tab plus propre.
 - **Compteur cross-server** — Quand activé et que la DB arcadia-lib est joignable, chaque serveur heartbeat sa ligne dans une table partagée et lit les autres. La ligne `%peers%` du footer s'expand en une ligne par serveur.
@@ -234,7 +234,7 @@ Arcadia Spawn est un mod Minecraft NeoForge qui transforme l'expérience de spaw
 
 ## Installation
 
-1. Placez `arcadia_spawn-1.5.3.jar` dans votre dossier `mods/`. Arcadia Lib est inclus.
+1. Placez `arcadia_spawn-1.5.4.jar` dans votre dossier `mods/`. Arcadia Lib est inclus.
 2. (Optionnel) Installez [LuckPerms](https://luckperms.net/) pour les features basées permissions et le tri par weight.
 3. Démarrez le serveur. Au premier lancement, le mod crée `config/arcadia/spawn/config.toml`, `slot_bypass.toml`, `tablist.toml` et le dossier `lobbies/`.
 4. Éditez `config.toml` pour régler la dimension. Éditez `tablist.toml` et passez `enabled = true` pour activer la tab list. Lancez `/arcadia_spawn reload` pour appliquer les changements de lobby à chaud.

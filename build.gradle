@@ -10,7 +10,7 @@ tasks.named('wrapper', Wrapper).configure {
     gradleVersion = '8.7'
 }
 
-version = '1.5.3'
+version = '1.5.4'
 group = 'com.arcadia.spawn'
 
 repositories {
@@ -63,6 +63,16 @@ neoForge {
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+// Keep the mod version in neoforge.mods.toml in sync with the Gradle version so it
+// can never go stale. The toml uses the ${mod_version} placeholder.
+tasks.named('processResources', ProcessResources).configure {
+    def expandProps = [mod_version: project.version.toString()]
+    inputs.properties(expandProps)
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand(expandProps)
+    }
+}
 
 dependencies {
     implementation files("libs/arcadia-lib-1.2.0.jar")

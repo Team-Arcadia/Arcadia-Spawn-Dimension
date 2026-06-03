@@ -4,7 +4,49 @@ All notable changes to Arcadia Spawn are documented here.
 
 ---
 
-## [1.5.3] - 2026-05-19 (latest)
+## [1.5.4] - 2026-06-03 (latest)
+
+### Fixed
+
+- **Player & entity collisions restored** — The grade-sorting tab list placed every player into a scoreboard team created with `CollisionRule.NEVER`. Because a team's collision rule overrides vanilla pushing, `EntitySelector.pushableBy` returned "push nothing", disabling all player↔player **and** player↔entity collisions. The rule now defaults to `ALWAYS` (vanilla) and is re-applied on every team sync, so teams previously persisted to `scoreboard.dat` with the broken rule are repaired automatically. A new `collision_rule` option (`ALWAYS` / `NEVER` / `PUSH_OWN_TEAM` / `PUSH_OTHER_TEAMS`) makes the behaviour configurable.
+- **RTP no longer dumps players at (0, 0, 0)** — `findRandomSafePos()` returned a hardcoded world-origin column when every attempt failed, skipping the fluid/ground safety checks and teleporting players into the void or lava at spawn with a misleading "success" message. It now signals failure, surfacing the already-localized "Could not find a safe position" message instead.
+- **Dimension load crash on extreme `min_y`** — `min_y` was passed to `DimensionType` unclamped (unlike `height` / `logical_height`), so an out-of-range or non-multiple-of-16 value crashed dimension registration at load. `min_y` is now snapped to a multiple of 16 and clamped to Minecraft's hard limits in both the `arcadia:spawn` and custom-dimension paths.
+- **Infinite recursion in dimension backup recovery** — `CustomDimensionManager.loadOne()` retried a corrupt definition from its newest backup by calling itself; if that backup was also corrupt it recursed forever (`StackOverflowError`). Recovery is now capped at a single retry.
+- **Phantom lobby teleports** — In the `/lobby` menu, clicks were bound to `locations.size()` instead of the 7 rendered icon slots, so with 8+ lobbies configured a click on a decorative glass pane teleported to a never-shown location. Clicks are now bound to the actual icon slots (10–16).
+- **Lobby file namespace collision** — Lobby files were named and matched by dimension *path* only, so two dimensions sharing a path across namespaces (e.g. `minecraft:lobby` / `arcadia:lobby`) overwrote each other's data. Files are now namespaced (`<namespace>.<path>.json`) and matched on the full `ResourceKey`; legacy files are migrated automatically on load with no data loss.
+- **Silent diagnostics gaps** — Invalid LuckPerms integer meta, failed translation `String.format` calls, and failed backup deletions were swallowed without a trace. Each now logs a warning while keeping the safe fallback behaviour.
+
+### Changed
+
+- **Mod version is now sourced from Gradle** — `neoforge.mods.toml` used a hardcoded `version` that had drifted to `1.5.0`. It now expands `${mod_version}` from the build during `processResources`, so the displayed version can never go stale. `license` is corrected to `LGPL-3.0-or-later` and the issue-tracker URL is populated.
+
+### Performance
+
+- **Bounded RTP chunk generation** — `/arcadiartp` force-generated a chunk on the server thread for every attempt (up to `rtp_max_attempts`), able to freeze the server for seconds in unexplored terrain. It now evaluates already-loaded chunks for free (`getChunkNow`) and caps forced generation at 8 chunks per call, bounding the worst-case stall while still reaching fresh terrain.
+
+---
+
+### Correctifs
+
+- **Collisions joueurs & entités restaurées** — La tab list triée par grade plaçait chaque joueur dans une scoreboard team créée avec `CollisionRule.NEVER`. Comme la règle de collision d'une team override le push vanilla, `EntitySelector.pushableBy` renvoyait « ne pousse rien », désactivant toutes les collisions joueur↔joueur **et** joueur↔entité. La règle est désormais `ALWAYS` (vanilla) par défaut et ré-appliquée à chaque sync de team, donc les teams déjà persistées dans `scoreboard.dat` avec la mauvaise règle sont réparées automatiquement. Une nouvelle option `collision_rule` (`ALWAYS` / `NEVER` / `PUSH_OWN_TEAM` / `PUSH_OTHER_TEAMS`) rend le comportement configurable.
+- **RTP ne téléporte plus en (0, 0, 0)** — `findRandomSafePos()` renvoyait une colonne codée en dur à l'origine du monde quand toutes les tentatives échouaient, en sautant les vérifications fluide/sol et en téléportant le joueur dans le vide ou la lave au spawn avec un message « succès » trompeur. La méthode signale désormais l'échec, affichant à la place le message déjà localisé « Impossible de trouver une position sûre ».
+- **Crash de chargement de dimension sur `min_y` extrême** — `min_y` était passé à `DimensionType` sans clamp (contrairement à `height` / `logical_height`), donc une valeur hors limites ou non multiple de 16 crashait l'enregistrement de la dimension au chargement. `min_y` est maintenant aligné sur un multiple de 16 et borné aux limites dures de Minecraft, dans le chemin `arcadia:spawn` comme dans celui des dimensions personnalisées.
+- **Récursion infinie dans la récupération de backup de dimension** — `CustomDimensionManager.loadOne()` retentait une définition corrompue depuis son backup le plus récent en s'appelant lui-même ; si ce backup était lui aussi corrompu, la récursion ne s'arrêtait jamais (`StackOverflowError`). La récupération est désormais limitée à une seule tentative.
+- **Téléportations de lobby fantômes** — Dans le menu `/lobby`, les clics étaient bornés à `locations.size()` au lieu des 7 slots d'icônes affichés, donc avec 8+ lobbies configurés un clic sur une vitre décorative téléportait vers un emplacement jamais affiché. Les clics sont maintenant bornés aux vrais slots d'icônes (10–16).
+- **Collision de namespace des fichiers de lobby** — Les fichiers de lobby étaient nommés et filtrés par le *path* de la dimension uniquement, donc deux dimensions partageant un path entre namespaces (ex. `minecraft:lobby` / `arcadia:lobby`) écrasaient leurs données mutuellement. Les fichiers sont désormais namespacés (`<namespace>.<path>.json`) et filtrés sur le `ResourceKey` complet ; les anciens fichiers sont migrés automatiquement au chargement sans perte de données.
+- **Trous de diagnostic silencieux** — Une meta entière LuckPerms invalide, un `String.format` de traduction en échec, et une suppression de backup en échec étaient avalés sans trace. Chacun log désormais un warning tout en conservant le fallback sûr.
+
+### Modifications
+
+- **La version du mod provient désormais de Gradle** — `neoforge.mods.toml` utilisait une `version` codée en dur qui avait dérivé à `1.5.0`. Elle expand maintenant `${mod_version}` depuis le build pendant `processResources`, donc la version affichée ne peut plus être obsolète. `license` est corrigée en `LGPL-3.0-or-later` et l'URL du tracker d'issues est renseignée.
+
+### Performance
+
+- **Génération de chunks RTP bornée** — `/arcadiartp` forçait la génération d'un chunk sur le thread serveur à chaque tentative (jusqu'à `rtp_max_attempts`), pouvant geler le serveur plusieurs secondes en terrain inexploré. Il évalue désormais gratuitement les chunks déjà chargés (`getChunkNow`) et limite la génération forcée à 8 chunks par appel, bornant le gel maximal tout en atteignant le terrain neuf.
+
+---
+
+## [1.5.3] - 2026-05-19
 
 ### Added
 

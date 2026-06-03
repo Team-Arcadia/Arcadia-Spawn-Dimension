@@ -160,6 +160,7 @@ public class DimensionRegistry {
             height = (height >> 4) << 4;
             ArcadiaSpawnMod.LOGGER.warn("height must be multiple of 16, snapped to {}.", height);
         }
+        minY = clampMinY(minY, height);
 
         return new DimensionType(
                 SpawnConfig.COMMON.timeLocked.get() ? OptionalLong.of(SpawnConfig.COMMON.fixedTime.get()) : OptionalLong.empty(),
@@ -181,6 +182,30 @@ public class DimensionRegistry {
                         SpawnConfig.COMMON.hasRaids.get(),
                         ConstantInt.of(SpawnConfig.COMMON.monsterSpawnLightLevel.get()),
                         SpawnConfig.COMMON.monsterSpawnBlockLightLimit.get()));
+    }
+
+    /**
+     * Clamps min_y to Minecraft's hard limits so an out-of-range config value can't
+     * crash dimension registration. A DimensionType requires min_y to be a multiple
+     * of 16, min_y &gt;= -MAX_TOTAL_HEIGHT, and min_y + height &lt;= MAX_TOTAL_HEIGHT.
+     */
+    public static int clampMinY(int minY, int height) {
+        if ((minY & 15) != 0) {
+            int snapped = (minY >> 4) << 4; // floor toward -inf, stays a multiple of 16
+            ArcadiaSpawnMod.LOGGER.warn("min_y {} must be a multiple of 16, snapped to {}.", minY, snapped);
+            minY = snapped;
+        }
+        if (minY < -MAX_TOTAL_HEIGHT) {
+            ArcadiaSpawnMod.LOGGER.warn("min_y {} below floor {}, clamping.", minY, -MAX_TOTAL_HEIGHT);
+            minY = -MAX_TOTAL_HEIGHT;
+        }
+        if (minY + height > MAX_TOTAL_HEIGHT) {
+            int newMinY = ((MAX_TOTAL_HEIGHT - height) >> 4) << 4;
+            ArcadiaSpawnMod.LOGGER.warn("min_y {} + height {} exceeds {}, lowering min_y to {}.",
+                    minY, height, MAX_TOTAL_HEIGHT, newMinY);
+            minY = newMinY;
+        }
+        return minY;
     }
 
     // Reflection constructor resolved lazily on first call (not <clinit>) — some

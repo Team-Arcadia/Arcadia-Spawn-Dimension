@@ -160,7 +160,17 @@ public final class TeleportHelper {
                 var user = lp.getUserManager().getUser(player.getUUID());
                 if (user == null) return defaultValue;
                 String value = user.getCachedData().getMetaData().getMetaValue(metaKey);
-                if (value != null) return Integer.parseInt(value);
+                if (value != null) {
+                    try {
+                        return Integer.parseInt(value.trim());
+                    } catch (NumberFormatException nfe) {
+                        // Admin-configured meta is free-form text; warn instead of silently
+                        // falling back so a typo (e.g. "30s") is diagnosable.
+                        ArcadiaSpawnMod.LOGGER.warn(
+                                "Invalid LuckPerms meta '{}'='{}' for {} (expected integer, using default {}).",
+                                metaKey, value, player.getName().getString(), defaultValue);
+                    }
+                }
             } catch (Exception ignored) {}
             return defaultValue;
         }

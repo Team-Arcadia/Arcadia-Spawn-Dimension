@@ -12,9 +12,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -39,20 +42,24 @@ public class LobbyManager {
             File[] files = CONFIG_DIR.toFile().listFiles((dir, name) -> name.endsWith(".json"));
             if (files == null) return;
 
+            List<File> loadedFiles = new ArrayList<>();
             for (File file : files) {
-                if (!loadFile(file)) {
+                boolean ok = loadFile(file);
+                if (!ok) {
                     File backup = SafeFileIO.findLatestBackup(file.toPath());
                     if (backup != null) {
                         ArcadiaSpawnMod.LOGGER.warn("Lobby file {} unreadable, restoring from {}", file.getName(), backup.getName());
                         try {
                             Files.copy(backup.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                            loadFile(file);
+                            ok = loadFile(file);
                         } catch (IOException io) {
                             ArcadiaSpawnMod.LOGGER.error("Failed to restore lobby file {} from backup", file.getName(), io);
                         }
                     }
                 }
+                if (ok) loadedFiles.add(file);
             }
+            migrateLegacyFilenames(loadedFiles);
             ArcadiaSpawnMod.LOGGER.info("Loaded {} lobby locations.", ALL_LOCATIONS.size());
         } catch (IOException e) {
             ArcadiaSpawnMod.LOGGER.error("Failed to initialize lobby manager", e);
@@ -76,8 +83,12 @@ public class LobbyManager {
                         obj.has("description") ? obj.get("description").getAsString() : "",
                         obj.has("item") ? obj.get("item").getAsString() : "minecraft:paper"
                 );
+                String nameKey = loc.name().toLowerCase(Locale.ROOT);
+                // Skip duplicates so a lingering legacy file alongside its migrated
+                // namespaced counterpart can't surface the same lobby twice.
+                if (INDEX.containsKey(nameKey)) continue;
                 ALL_LOCATIONS.add(loc);
-                INDEX.put(loc.name().toLowerCase(Locale.ROOT), loc);
+                INDEX.put(nameKey, loc);
             }
             return true;
         } catch (Exception e) {
@@ -120,13 +131,23 @@ public class LobbyManager {
         return ALL_LOCATIONS.size();
     }
 
+    /**
+     * Canonical on-disk file name for a dimension's lobbies, namespaced so two
+     * dimensions sharing a path across namespaces (e.g. {@code minecraft:lobby} and
+     * {@code arcadia:lobby}) can't collide on the same file.
+     */
+    private static String canonicalFilename(ResourceKey<Level> dimensionKey) {
+        return dimensionKey.location().toString().replace(':', '.') + ".json";
+    }
+
     private static void saveDimension(ResourceKey<Level> dimensionKey) {
-        String filename = dimensionKey.location().getPath() + ".json";
-        Path target = CONFIG_DIR.resolve(filename);
+        Path target = CONFIG_DIR.resolve(canonicalFilename(dimensionKey));
 
         List<LobbyLocation> toSave = new ArrayList<>();
         for (LobbyLocation loc : ALL_LOCATIONS) {
-            if (loc.dimension().location().getPath().equals(dimensionKey.location().getPath())) {
+            // Match on the FULL ResourceKey, not just the path, so distinct
+            // dimensions are never grouped into the same file.
+            if (loc.dimension().equals(dimensionKey)) {
                 toSave.add(loc);
             }
         }
@@ -154,7 +175,40 @@ public class LobbyManager {
         try {
             SafeFileIO.writeAtomicWithBackup(target, GSON.toJson(array));
         } catch (IOException e) {
-            ArcadiaSpawnMod.LOGGER.error("Failed to save lobby file {}", filename, e);
+            ArcadiaSpawnMod.LOGGER.error("Failed to save lobby file {}", target.getFileName(), e);
+        }
+    }
+
+    /**
+     * One-time migration from the legacy path-only file naming ({@code <path>.json})
+     * to the namespaced scheme ({@code <namespace>.<path>.json}). Runs after load:
+     * every successfully-loaded location already lives in memory, so re-saving each
+     * dimension to its canonical file and deleting the old files loses no data.
+     * Only files that loaded successfully are removed, so a corrupt/unreadable file
+     * is never deleted. No-op once every file is already canonical.
+     */
+    private static void migrateLegacyFilenames(List<File> loadedFiles) {
+        Set<String> canonical = new HashSet<>();
+        Set<ResourceKey<Level>> dimensions = new LinkedHashSet<>();
+        for (LobbyLocation loc : ALL_LOCATIONS) {
+            canonical.add(canonicalFilename(loc.dimension()));
+            dimensions.add(loc.dimension());
+        }
+
+        List<File> legacy = new ArrayList<>();
+        for (File f : loadedFiles) {
+            if (!canonical.contains(f.getName())) legacy.add(f);
+        }
+        if (legacy.isEmpty()) return; // already canonical
+
+        for (ResourceKey<Level> dim : dimensions) saveDimension(dim);
+
+        for (File f : legacy) {
+            if (f.delete()) {
+                ArcadiaSpawnMod.LOGGER.info("Migrated lobby file {} to namespaced format.", f.getName());
+            } else {
+                ArcadiaSpawnMod.LOGGER.warn("Could not remove legacy lobby file {} after migration.", f.getName());
+            }
         }
     }
 }

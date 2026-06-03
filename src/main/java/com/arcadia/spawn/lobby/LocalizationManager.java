@@ -59,6 +59,8 @@ public class LocalizationManager {
         try {
             return Component.literal(String.format(template, args));
         } catch (Exception e) {
+            ArcadiaSpawnMod.LOGGER.warn("Translation format failed for key '{}' (template '{}', args {}): {}",
+                    key, template, java.util.Arrays.toString(args), e.getMessage());
             return Component.literal(template);
         }
     }
@@ -73,6 +75,8 @@ public class LocalizationManager {
         try {
             return String.format(template, args);
         } catch (Exception e) {
+            ArcadiaSpawnMod.LOGGER.warn("Translation format failed for key '{}' (template '{}', args {}): {}",
+                    key, template, java.util.Arrays.toString(args), e.getMessage());
             return template;
         }
     }

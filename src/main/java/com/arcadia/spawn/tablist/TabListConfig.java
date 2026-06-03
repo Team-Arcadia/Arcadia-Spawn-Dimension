@@ -1,5 +1,6 @@
 package com.arcadia.spawn.tablist;
 
+import net.minecraft.world.scores.Team;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -34,6 +35,7 @@ public class TabListConfig {
         // Group sorting
         public final ModConfigSpec.ConfigValue<Boolean> groupSortingEnabled;
         public final ModConfigSpec.ConfigValue<Boolean> showLuckPermsPrefix;
+        public final ModConfigSpec.EnumValue<Team.CollisionRule> collisionRule;
 
         // Spectator hiding
         public final ModConfigSpec.ConfigValue<Boolean> hideSpectatorsFromTab;
@@ -117,6 +119,15 @@ public class TabListConfig {
                     "Prefix the player name with their LuckPerms group prefix (e.g. '[VIP] Player').",
                     "Has no effect without LuckPerms.")
                     .define("show_luckperms_prefix", true);
+
+            collisionRule = builder.comment(
+                    "Collision rule applied to the grade-sorting teams. Players are bucketed into",
+                    "scoreboard teams to sort the tab, and a team's collision rule overrides vanilla",
+                    "player/entity pushing. Keep ALWAYS (vanilla behaviour) unless you specifically",
+                    "want to disable pushing. The rule is re-applied on every sync, so changing it",
+                    "here also repairs teams previously saved with the wrong rule.",
+                    "Values: ALWAYS, NEVER, PUSH_OWN_TEAM, PUSH_OTHER_TEAMS.")
+                    .defineEnum("collision_rule", Team.CollisionRule.ALWAYS);
 
             hideSpectatorsFromTab = builder.comment(
                     "Hide players in vanilla Spectator gamemode from the tab list of normal players.",

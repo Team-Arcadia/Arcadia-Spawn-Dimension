@@ -140,8 +140,17 @@ public final class TabListManager {
         PlayerTeam team = scoreboard.getPlayerTeam(teamName);
         if (team == null) {
             team = scoreboard.addPlayerTeam(teamName);
-            team.setCollisionRule(Team.CollisionRule.NEVER);
             team.setSeeFriendlyInvisibles(false);
+        }
+
+        // Enforce the configured collision rule on every sync (not just on creation):
+        // scoreboard teams persist in scoreboard.dat, so a team previously saved with a
+        // different rule must be corrected here, otherwise players keep the stale rule.
+        // Default ALWAYS = vanilla player/entity pushing. Guard against redundant updates
+        // so we don't broadcast a team packet when nothing changed.
+        Team.CollisionRule desiredRule = TabListConfig.VALUES.collisionRule.get();
+        if (team.getCollisionRule() != desiredRule) {
+            team.setCollisionRule(desiredRule);
         }
 
         // Prefix from LuckPerms meta (translated) when enabled.
