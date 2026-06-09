@@ -73,36 +73,47 @@ public final class PlaceholderFormatter {
             result = sb.toString();
         }
 
-        result = result.replace("%server%", serverDisplayName);
-        result = result.replace("%online%", String.valueOf(server.getPlayerList().getPlayerCount()));
-        result = result.replace("%max%", String.valueOf(server.getMaxPlayers()));
-        result = result.replace("%tps%", formatTps(server));
-        result = result.replace("%mspt%", formatMspt(server));
-        result = result.replace("%uptime%", formatUptime(server));
+        // Each replace() that runs allocates a new String even when the placeholder is absent,
+        // and the value-producing helpers (formatTps/Mspt/Uptime, GradeResolver.resolve →
+        // LuckPerms lookup) are not free. This runs once per online player every refresh tick,
+        // so we guard every replacement on a cheap contains() scan and only compute a value
+        // when its placeholder is actually present in the line.
+        if (result.contains("%server%"))  result = result.replace("%server%", serverDisplayName);
+        if (result.contains("%online%"))  result = result.replace("%online%", String.valueOf(server.getPlayerList().getPlayerCount()));
+        if (result.contains("%max%"))     result = result.replace("%max%", String.valueOf(server.getMaxPlayers()));
+        if (result.contains("%tps%"))     result = result.replace("%tps%", formatTps(server));
+        if (result.contains("%mspt%"))    result = result.replace("%mspt%", formatMspt(server));
+        if (result.contains("%uptime%"))  result = result.replace("%uptime%", formatUptime(server));
 
         if (player != null) {
-            result = result.replace("%player_name%", player.getName().getString());
-            result = result.replace("%player_ping%", String.valueOf(player.connection != null ? player.connection.latency() : 0));
-            result = result.replace("%player_playtime%", formatPlaytime(player));
+            if (result.contains("%player_name%"))     result = result.replace("%player_name%", player.getName().getString());
+            if (result.contains("%player_ping%"))     result = result.replace("%player_ping%", String.valueOf(player.connection != null ? player.connection.latency() : 0));
+            if (result.contains("%player_playtime%")) result = result.replace("%player_playtime%", formatPlaytime(player));
 
-            GradeResolver.Grade grade = GradeResolver.resolve(player);
-            result = result.replace("%lp_group%", grade.display());
-            result = result.replace("%lp_prefix%", grade.prefix());
+            // Resolve the grade (a LuckPerms cache traversal) only when a grade placeholder is present.
+            if (result.contains("%lp_group%") || result.contains("%lp_prefix%")) {
+                GradeResolver.Grade grade = GradeResolver.resolve(player);
+                if (result.contains("%lp_group%"))  result = result.replace("%lp_group%", grade.display());
+                if (result.contains("%lp_prefix%")) result = result.replace("%lp_prefix%", grade.prefix());
+            }
         } else {
-            result = result.replace("%player_name%", "");
-            result = result.replace("%player_ping%", "0");
-            result = result.replace("%player_playtime%", "");
-            result = result.replace("%lp_group%", "");
-            result = result.replace("%lp_prefix%", "");
+            if (result.contains("%player_name%"))     result = result.replace("%player_name%", "");
+            if (result.contains("%player_ping%"))     result = result.replace("%player_ping%", "0");
+            if (result.contains("%player_playtime%")) result = result.replace("%player_playtime%", "");
+            if (result.contains("%lp_group%"))        result = result.replace("%lp_group%", "");
+            if (result.contains("%lp_prefix%"))       result = result.replace("%lp_prefix%", "");
         }
 
-        int crossTotal = server.getPlayerList().getPlayerCount();
-        for (PeerSnapshot peer : peers) {
-            if (!peer.alive()) continue;
-            if (peer.serverId().equals(CrossServerDb.localServerId())) continue;
-            crossTotal += peer.online();
+        if (result.contains("%cross_total%")) {
+            int crossTotal = server.getPlayerList().getPlayerCount();
+            String localId = CrossServerDb.localServerId(); // hoisted out of the peer loop
+            for (PeerSnapshot peer : peers) {
+                if (!peer.alive()) continue;
+                if (peer.serverId().equals(localId)) continue;
+                crossTotal += peer.online();
+            }
+            result = result.replace("%cross_total%", String.valueOf(crossTotal));
         }
-        result = result.replace("%cross_total%", String.valueOf(crossTotal));
 
         return result;
     }
@@ -115,7 +126,23 @@ public final class PlaceholderFormatter {
         if (peers == null || peers.isEmpty()) {
             return out;
         }
-        for (PeerSnapshot p : peers) {
+
+        // Honour the configured peer_order: peers listed there render first in that order,
+        // unknown peers keep their DB order at the end. Previously peer_order was defined in
+        // config but never consulted, so the footer always used arbitrary DB iteration order.
+        List<? extends String> order = TabListConfig.VALUES.peerOrder.get();
+        List<PeerSnapshot> ordered;
+        if (order != null && !order.isEmpty()) {
+            ordered = new java.util.ArrayList<>(peers);
+            ordered.sort(java.util.Comparator.comparingInt(p -> {
+                int idx = order.indexOf(p.serverId());
+                return idx < 0 ? Integer.MAX_VALUE : idx;
+            }));
+        } else {
+            ordered = new java.util.ArrayList<>(peers);
+        }
+
+        for (PeerSnapshot p : ordered) {
             String rawName = (p.displayName() != null && !p.displayName().isBlank()) ? p.displayName() : p.serverId();
             // Pad/truncate to a tidy 10-char column so the counts align.
             String name = rawName.length() > 10 ? rawName.substring(0, 10) : String.format("%-10s", rawName);

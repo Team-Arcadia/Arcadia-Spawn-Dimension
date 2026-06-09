@@ -1,3 +1,72 @@
+# Arcadia Spawn — Technical Audit Report (v1.5.5)
+
+**Date:** 2026-06-09  
+**Version:** 1.5.5  
+**Author:** vyrriox  
+**Scope:** arcadia-lib `1.2.0 → 1.2.14` migration + deep re-audit of all source files across five
+dimensions (concurrency, performance, security, correctness, **migration impact**). 20 candidate
+findings were raised by independent finders and each was adversarially re-verified; 13 were confirmed
+(after dedup, 11 distinct issues) and fixed, 7 rejected as false positives (single-threaded-server
+races, dead code, already-safe snapshot patterns).
+
+## Migration
+
+The library API the mod consumes is **source-compatible** 1.2.0 → 1.2.14 (verified each call site
+against the 1.2.14 source — `ArcadiaModRegistry`, `ArcadiaModCard`, `DatabaseManager`,
+`ArcadiaMessages`, `CooldownManager`, `DashboardTabHandler`, `ServerContext`, `TableDefinition`,
+`ArcadiaTheme`). The jar was swapped in `libs/`, `build.gradle` and `mods.toml` (`[1.2.14,)`) updated,
+and the build is clean. The behavioural break that mattered: 1.2.14's permission backend is now
+**fail-closed (DENY)** on dedicated servers — which is what motivated the three permission fixes below.
+
+## Confirmed & Fixed
+
+| # | Area | Severity | Issue | Fix |
+|---|------|----------|-------|-----|
+| 1 | Security / slots | **HIGH** | `SlotBypassHandler` failed **open** on a permission-check exception → with the new fail-closed lib, a LuckPerms/DB error on a full server let unlimited players past the slot cap. | Fail-closed: exception denies + disconnects (bilingual message). |
+| 2 | Security / dimensions | **HIGH** | `dimension delete` skipped the id validation `create` performs → `../..` path traversal into the dimensions dir. | Same `isValidDimensionId()` gate as `create`. |
+| 3 | Security / permissions | MEDIUM | `PermissionRegistry.require()` fell back to op-level on a thrown check → op-2 admin bypassed LuckPerms-gated nodes when the backend errored. | Deny on exception when LuckPerms is present; op fallback only when no backend exists. |
+| 4 | Concurrency | MEDIUM | `LocalizationManager.TRANSLATIONS` plain `HashMap` rewritten on reload while read on message paths → torn read. | `ConcurrentHashMap` + null-map guard. |
+| 5 | Perf / tab list | MEDIUM | `syncTeamFor()` scanned every scoreboard team per player per refresh. | O(1) `scoreboard.getPlayersTeam()`. |
+| 6 | Perf / tab list | MEDIUM | `PlaceholderFormatter.expand()` did 13 unconditional `String.replace` + per-line LuckPerms `resolve()` + `String.format`. | Guard each replacement/value on a `contains()` check. |
+| 7 | Perf / tab list | LOW | `apply()` recomputed `resolveServerDisplayName()` per player. | Resolve once per refresh, pass in. |
+| 8 | Perf / tab list | LOW | `%cross_total%` recomputed `localServerId()` per peer. | Hoisted out of the loop. |
+| 9 | Correctness / config | LOW | `peer_order` config defined but never read. | `expandPeers()` now sorts by it. |
+| 10 | Correctness / lobby | MEDIUM | Required lobby-JSON fields read via `.get().getAsX()`, relying on a caught NPE. | Validate with `.has()`, skip a bad entry with a warning. |
+| 11 | Concurrency / shutdown | (reworked) | `CrossServerDb.cleanup()` ran synchronous JDBC on the shutdown thread → could hang shutdown on a slow DB (raised CRITICAL by 3 finders). | Run async on the DB executor, block the shutdown thread for at most 3 s — no indefinite hang, no JVM-exit race. |
+
+## Reviewed — rejected (false positives)
+
+- **`TeleportHelper.tick()` / `RTPData` / `TabListManager` counters "data races"** — the server is single-threaded; command, container and tick code all run on the server thread. No concurrency.
+- **`SpectatorVisibility.reconcile()` "modified during iteration"** — it iterates a `toReveal` snapshot, not `HIDDEN`. Safe.
+- **`LobbyTabHandler.locations` "shared race"** — `LobbyTabHandler` is dead code; the live UI is `LobbyMenu` (constructor-local field).
+- **`LobbyManager.loadFile()` "FileNotFound on backup race"** — caught, fail-closed, backup retried next reload. Intended.
+
+## Build verification
+
+`./gradlew compileJava` and `./gradlew jar` both succeed (only pre-existing `EventBusSubscriber.Bus` /
+Eclipse null-analysis warnings). The built `arcadia_spawn-1.5.5.jar` reports `version="1.5.5"` and
+`arcadia_lib` `versionRange="[1.2.14,)"`.
+
+---
+
+# Rapport d'Audit — Arcadia Spawn (v1.5.5)
+
+**Date :** 2026-06-09  
+**Version :** 1.5.5  
+**Auteur :** vyrriox  
+**Portée :** Migration arcadia-lib `1.2.0 → 1.2.14` + ré-audit profond de tous les fichiers source sur
+cinq dimensions (concurrence, performance, sécurité, correction, **impact migration**). 20 findings
+candidats levés par des finders indépendants, chacun re-vérifié de façon adversariale ; 13 confirmés
+(11 distincts après dédup) et corrigés, 7 rejetés (faux positifs : races sur serveur mono-thread, code
+mort, patterns de snapshot déjà sûrs). Détail des correctifs dans le [CHANGELOG](CHANGELOG.md) 1.5.5.
+
+**Migration :** l'API de la lib utilisée est **source-compatible** 1.2.0 → 1.2.14 (chaque site d'appel
+vérifié contre la source 1.2.14). Le jar a été remplacé, `build.gradle` et `mods.toml` (`[1.2.14,)`) mis
+à jour, build propre. La rupture de comportement importante : le backend de permissions de 1.2.14 est
+désormais **fail-closed (DENY)** sur serveur dédié — ce qui a motivé les trois correctifs de permission.
+
+---
+
 # Arcadia Spawn — Technical Audit Report (v1.5.4)
 
 **Date:** 2026-06-03  

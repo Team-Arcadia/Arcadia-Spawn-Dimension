@@ -54,7 +54,14 @@ public final class PermissionRegistry {
 
     /**
      * Brigadier .requires() predicate. Console always passes.
-     * Player passes if PermissionAPI returns true OR op-level fallback inside the node.
+     * Player passes if PermissionAPI returns true; if the check throws, behaviour depends on
+     * whether a real permission backend (LuckPerms) is present:
+     *   - No LuckPerms (singleplayer / no perms plugin): fall back to vanilla op-level. This is
+     *     the intended behaviour — there is no backend to consult, so op gates the command.
+     *   - LuckPerms present but the check threw (crash, provider not bound, DB offline): fail
+     *     CLOSED (deny). An exception here means "could not verify", and silently dropping to
+     *     op-level would let any op-2 admin run a node the operator deliberately gated behind
+     *     LuckPerms. arcadia-lib 1.2.14's backend is itself fail-closed for the same reason.
      */
     public static java.util.function.Predicate<CommandSourceStack> require(PermissionNode<Boolean> node, int opFallback) {
         return source -> {
@@ -64,6 +71,11 @@ public final class PermissionRegistry {
             try {
                 return PermissionAPI.getPermission(player, node);
             } catch (Exception e) {
+                if (com.arcadia.spawn.tablist.GradeResolver.hasLuckPerms()) {
+                    ArcadiaSpawnMod.LOGGER.error("Permission check for '{}' threw with LuckPerms present — denying (fail-closed).",
+                            node.getNodeName(), e);
+                    return false;
+                }
                 return player.hasPermissions(opFallback);
             }
         };

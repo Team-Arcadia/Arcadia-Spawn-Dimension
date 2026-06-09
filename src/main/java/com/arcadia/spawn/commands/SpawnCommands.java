@@ -380,6 +380,16 @@ public class SpawnCommands {
         String id = StringArgumentType.getString(ctx, "id");
         CommandSourceStack source = ctx.getSource();
 
+        // Validate the id before it reaches CustomDimensionManager.exists()/delete(), which
+        // resolve it into a filesystem path (id + ".json"). Without this, a crafted id with
+        // ".." or "/" components would escape the dimensions directory (path traversal).
+        // createDimension() already validates; delete must match.
+        if (!InputValidation.isValidDimensionId(id)) {
+            source.sendFailure(Component.literal("Invalid id. Use lowercase alphanumeric + underscore, 3-32 chars.")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
         if (!CustomDimensionManager.exists(id)) {
             source.sendFailure(Component.literal("No such dimension: " + id).withStyle(ChatFormatting.RED));
             return 0;

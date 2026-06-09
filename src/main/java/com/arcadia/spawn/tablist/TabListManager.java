@@ -78,8 +78,10 @@ public final class TabListManager {
         SpectatorVisibility.reconcile(server);
 
         List<PeerSnapshot> peers = PEER_CACHE.get();
+        // Resolve the server display name once per refresh — it is identical for every player.
+        String displayName = resolveServerDisplayName();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            apply(player, server, peers);
+            apply(player, server, peers, displayName);
         }
     }
 
@@ -89,7 +91,7 @@ public final class TabListManager {
         if (player == null) return;
 
         syncTeamFor(player);
-        apply(player, player.getServer(), PEER_CACHE.get());
+        apply(player, player.getServer(), PEER_CACHE.get(), resolveServerDisplayName());
     }
 
     /** Called on UserDataRecalculateEvent (LuckPerms) — refreshes the team for one player. */
@@ -107,9 +109,7 @@ public final class TabListManager {
 
     // ── Internals ───────────────────────────────────────────────────────────
 
-    private static void apply(ServerPlayer player, MinecraftServer server, List<PeerSnapshot> peers) {
-        String displayName = resolveServerDisplayName();
-
+    private static void apply(ServerPlayer player, MinecraftServer server, List<PeerSnapshot> peers, String displayName) {
         Component header = PlaceholderFormatter.formatLines(
                 TabListConfig.VALUES.headerLines.get(), player, server, displayName, peers);
         Component footer = PlaceholderFormatter.formatLines(
@@ -175,13 +175,12 @@ public final class TabListManager {
         }
 
         String entry = player.getGameProfile().getName();
-        // Remove from any other arcadia-spawn team first (entries are unique per scoreboard)
-        for (PlayerTeam existing : scoreboard.getPlayerTeams()) {
-            if (existing == team) continue;
-            if (!existing.getName().startsWith("as_")) continue;
-            if (existing.getPlayers().contains(entry)) {
-                scoreboard.removePlayerFromTeam(entry, existing);
-            }
+        // Remove from a stale arcadia-spawn team first (entries are unique per scoreboard).
+        // getPlayersTeam() is an O(1) reverse lookup — far cheaper than scanning every team on
+        // the scoreboard each sync (which is O(teams) and runs per player per refresh tick).
+        PlayerTeam current = scoreboard.getPlayersTeam(entry);
+        if (current != null && current != team && current.getName().startsWith("as_")) {
+            scoreboard.removePlayerFromTeam(entry, current);
         }
         scoreboard.addPlayerToTeam(entry, team);
     }

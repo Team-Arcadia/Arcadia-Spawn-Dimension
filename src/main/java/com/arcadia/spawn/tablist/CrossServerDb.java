@@ -121,16 +121,41 @@ public final class CrossServerDb implements TableDefinition {
         });
     }
 
-    /** Async cleanup of this server's row on shutdown. */
+    /**
+     * Removes this server's row from the shared DB on shutdown.
+     *
+     * The DELETE runs on the DatabaseManager executor (off the shutdown thread) but we
+     * block the caller for at most {@link #CLEANUP_TIMEOUT_MS}. This is the middle path
+     * between the two failure modes: a purely synchronous DELETE can hang the shutdown
+     * sequence indefinitely on a slow/unreachable DB (HikariCP acquisition stall), while a
+     * pure fire-and-forget races the JVM exit and usually drops the cleanup before the row
+     * is deleted. A short bounded wait deletes the row in the common case yet caps the
+     * worst-case shutdown stall.
+     */
+    private static final long CLEANUP_TIMEOUT_MS = 3000L;
+
     public static void cleanup() {
         if (!isAvailable()) return;
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "DELETE FROM " + TABLE + " WHERE server_id = ?")) {
-            ps.setString(1, localServerId());
-            ps.executeUpdate();
+        java.util.concurrent.CompletableFuture<Void> done = new java.util.concurrent.CompletableFuture<>();
+        DatabaseManager.executeAsync(() -> {
+            try (Connection conn = DatabaseManager.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(
+                         "DELETE FROM " + TABLE + " WHERE server_id = ?")) {
+                ps.setString(1, localServerId());
+                ps.executeUpdate();
+            } catch (Exception e) {
+                ArcadiaSpawnMod.LOGGER.debug("tablist cleanup failed: {}", e.getMessage());
+            } finally {
+                done.complete(null);
+            }
+        });
+        try {
+            done.get(CLEANUP_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
         } catch (Exception e) {
-            ArcadiaSpawnMod.LOGGER.debug("tablist cleanup failed: {}", e.getMessage());
+            // Timed out or interrupted — let shutdown proceed; the stale row ages out
+            // of the peer list via peer_timeout_seconds on the remaining servers.
+            ArcadiaSpawnMod.LOGGER.debug("tablist cleanup did not finish within {}ms: {}",
+                    CLEANUP_TIMEOUT_MS, e.getMessage());
         }
     }
 

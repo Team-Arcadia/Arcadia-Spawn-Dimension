@@ -11,11 +11,15 @@ import net.minecraft.server.level.ServerPlayer;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LocalizationManager {
-    private static final Map<String, Map<String, String>> TRANSLATIONS = new HashMap<>();
+    // ConcurrentHashMap: written on init() and on /spawn reload (force-reload-all), read from
+    // command/teleport message paths. A reload putting a language while a reader does
+    // getOrDefault on a plain HashMap could observe a torn internal table. The per-language
+    // inner maps are published once via put() and never mutated, so they stay plain HashMaps.
+    private static final Map<String, Map<String, String>> TRANSLATIONS = new ConcurrentHashMap<>();
     private static final Gson GSON = new GsonBuilder().create();
 
     public static void init() {
@@ -32,6 +36,12 @@ public class LocalizationManager {
             }
             try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
                 Map<String, String> map = GSON.fromJson(reader, new TypeToken<Map<String, String>>() {}.getType());
+                if (map == null) {
+                    // Empty or malformed file → Gson returns null. ConcurrentHashMap rejects
+                    // null values, and a null lang map would break getOrDefault fallbacks.
+                    ArcadiaSpawnMod.LOGGER.error("Language file {} parsed to null (empty/malformed) — skipping.", path);
+                    return;
+                }
                 TRANSLATIONS.put(langCode, map);
                 ArcadiaSpawnMod.LOGGER.info("Loaded language: {}", langCode);
             }

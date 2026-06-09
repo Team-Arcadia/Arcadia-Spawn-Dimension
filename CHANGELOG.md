@@ -4,7 +4,65 @@ All notable changes to Arcadia Spawn are documented here.
 
 ---
 
-## [1.5.4] - 2026-06-03 (latest)
+## [1.5.5] - 2026-06-09 (latest)
+
+### Changed
+
+- **Migrated to arcadia-lib 1.2.14** — Bumped the bundled `arcadia-lib` from `1.2.0` to `1.2.14` and raised the `mods.toml` dependency to `[1.2.14,)`. The library API the mod consumes (`ArcadiaModRegistry`, `ArcadiaModCard`, `DatabaseManager`, `ArcadiaMessages`, `CooldownManager`, `DashboardTabHandler`, `ServerContext`, `TableDefinition`, `ArcadiaTheme`) is source-compatible, but 1.2.14 changed runtime behaviour — most importantly the permission backend is now **fail-closed (DENY)** by default on dedicated servers. The audit fixes below align the mod's own permission paths with that new contract.
+
+### Security
+
+- **Slot bypass now fails CLOSED on a permission-check error** — `SlotBypassHandler` caught any exception from `PermissionAPI.getPermission()` and silently let the player in ("fail-open"). With arcadia-lib 1.2.14's fail-closed backend, a thrown check means "could not verify", not "allowed" — so a LuckPerms crash / DB outage during a full server would let unlimited players past the slot limit. An exception now denies and disconnects the player with a bilingual message.
+- **`/arcadia_spawn dimension delete` now validates its id (path traversal)** — `deleteDimension()` passed the raw command id straight to `CustomDimensionManager.exists()` / `delete()`, which resolve it into a `<id>.json` filesystem path — while `createDimension()` validated. An admin could pass `../../…` to escape the dimensions directory. `delete` now runs the same `InputValidation.isValidDimensionId()` gate as `create`.
+- **`PermissionRegistry.require()` fails closed when LuckPerms is present** — A thrown permission check fell back to vanilla op-level, so an op-2 admin kept access to a node the operator had deliberately gated behind LuckPerms whenever the backend errored. It now denies on exception **when LuckPerms is on the classpath**, and only falls back to op-level when there is genuinely no permission backend (singleplayer / no perms plugin).
+
+### Fixed
+
+- **`LocalizationManager.TRANSLATIONS` is thread-safe** — The translation table was a plain `HashMap` written on `init()` / `/spawn reload` and read from command and teleport message paths; a reload `put()` mid-resize could be observed as a torn read. Switched to `ConcurrentHashMap`, with a null-map guard for empty/malformed language files (which `ConcurrentHashMap` would otherwise reject).
+- **Malformed lobby entries are skipped, not NPE-recovered** — `LobbyManager.loadFile()` read required JSON fields with `.get(field).getAsX()`, relying on a caught `NullPointerException` for a missing field. Required fields are now validated with `.has()` and a single bad entry is skipped with a warning instead of aborting the whole file into backup recovery.
+
+### Performance
+
+- **Tab-list team sync is O(1) instead of O(teams)** — `syncTeamFor()` scanned every scoreboard team each sync (per player, per refresh tick) to find a stale `as_*` team to remove the player from. It now uses the O(1) reverse lookup `scoreboard.getPlayersTeam()`.
+- **Placeholder expansion skips work for absent placeholders** — `PlaceholderFormatter.expand()` ran 13 sequential `String.replace()` calls plus unconditional `formatTps/Mspt/Uptime` and a per-line `GradeResolver.resolve()` (a LuckPerms cache traversal) on every line, for every player, every refresh. Each replacement and its value are now guarded on a cheap `contains()` check, so a line that uses no `%lp_*%` placeholder never touches LuckPerms and a line with no `%tps%` never formats it.
+- **Server display name resolved once per refresh** — `apply()` recomputed `resolveServerDisplayName()` for every player in the refresh loop though it is identical across players; it is now resolved once and passed in.
+- **`%cross_total%` no longer recomputes the local server id per peer** — `localServerId()` is hoisted out of the peer-summing loop.
+
+### Fixed (config)
+
+- **`peer_order` config now actually orders peers** — The `peer_order` tab-list option was defined and documented but never read; the `%peers%` footer always rendered in arbitrary DB order. `expandPeers()` now sorts peers by the configured order, appending unknown peers at the end.
+
+---
+
+### Modifications
+
+- **Migration vers arcadia-lib 1.2.14** — `arcadia-lib` embarquée passée de `1.2.0` à `1.2.14` et dépendance `mods.toml` relevée à `[1.2.14,)`. L'API de la lib utilisée par le mod (`ArcadiaModRegistry`, `ArcadiaModCard`, `DatabaseManager`, `ArcadiaMessages`, `CooldownManager`, `DashboardTabHandler`, `ServerContext`, `TableDefinition`, `ArcadiaTheme`) est source-compatible, mais 1.2.14 change le comportement à l'exécution — surtout le backend de permissions désormais **fail-closed (DENY)** par défaut sur serveur dédié. Les correctifs d'audit ci-dessous alignent les chemins de permission du mod sur ce nouveau contrat.
+
+### Sécurité
+
+- **Le slot bypass échoue désormais en mode FERMÉ sur erreur de vérification** — `SlotBypassHandler` attrapait toute exception de `PermissionAPI.getPermission()` et laissait silencieusement entrer le joueur (« fail-open »). Avec le backend fail-closed de 1.2.14, une vérification qui lève signifie « impossible de vérifier », pas « autorisé » — donc un crash LuckPerms / panne DB sur un serveur plein laissait passer un nombre illimité de joueurs au-delà de la limite de slots. Une exception refuse et déconnecte désormais le joueur avec un message bilingue.
+- **`/arcadia_spawn dimension delete` valide désormais son id (traversée de chemin)** — `deleteDimension()` passait l'id brut directement à `CustomDimensionManager.exists()` / `delete()`, qui le résolvent en un chemin fichier `<id>.json` — alors que `createDimension()` validait. Un admin pouvait passer `../../…` pour sortir du dossier des dimensions. `delete` applique maintenant la même garde `InputValidation.isValidDimensionId()` que `create`.
+- **`PermissionRegistry.require()` échoue en mode fermé quand LuckPerms est présent** — Une vérification de permission qui lève retombait sur le niveau op vanilla, donc un admin op-2 gardait l'accès à un node que l'opérateur avait délibérément réservé à LuckPerms dès que le backend était en erreur. Il refuse désormais sur exception **quand LuckPerms est dans le classpath**, et ne retombe sur le niveau op que s'il n'y a réellement aucun backend de permissions (solo / pas de plugin de perms).
+
+### Correctifs
+
+- **`LocalizationManager.TRANSLATIONS` est thread-safe** — La table de traductions était une `HashMap` simple écrite au `init()` / `/spawn reload` et lue depuis les chemins de messages de commandes et de téléportation ; un `put()` de reload en plein redimensionnement pouvait être observé comme une lecture déchirée. Passée en `ConcurrentHashMap`, avec une garde contre les maps nulles (fichiers de langue vides/malformés que `ConcurrentHashMap` rejetterait).
+- **Les entrées de lobby malformées sont ignorées, pas récupérées par NPE** — `LobbyManager.loadFile()` lisait les champs JSON requis via `.get(champ).getAsX()`, comptant sur une `NullPointerException` attrapée pour un champ manquant. Les champs requis sont maintenant validés avec `.has()` et une seule entrée fautive est ignorée avec un warning au lieu d'abandonner tout le fichier vers la récupération de backup.
+
+### Performance
+
+- **La sync des teams de tab list est en O(1) au lieu de O(teams)** — `syncTeamFor()` scannait chaque team du scoreboard à chaque sync (par joueur, par tick de refresh) pour retirer le joueur d'une ancienne team `as_*`. Il utilise désormais la recherche inverse O(1) `scoreboard.getPlayersTeam()`.
+- **L'expansion de placeholders saute le travail pour les placeholders absents** — `PlaceholderFormatter.expand()` exécutait 13 `String.replace()` séquentiels plus `formatTps/Mspt/Uptime` inconditionnels et un `GradeResolver.resolve()` par ligne (un parcours du cache LuckPerms) sur chaque ligne, pour chaque joueur, à chaque refresh. Chaque remplacement et sa valeur sont désormais gardés par un `contains()` peu coûteux, donc une ligne sans placeholder `%lp_*%` ne touche jamais LuckPerms et une ligne sans `%tps%` ne le formate jamais.
+- **Nom d'affichage du serveur résolu une fois par refresh** — `apply()` recalculait `resolveServerDisplayName()` pour chaque joueur dans la boucle de refresh alors qu'il est identique pour tous ; il est désormais résolu une fois et transmis.
+- **`%cross_total%` ne recalcule plus l'id du serveur local par peer** — `localServerId()` est sorti de la boucle de somme des peers.
+
+### Correctifs (config)
+
+- **`peer_order` ordonne désormais réellement les peers** — L'option de tab list `peer_order` était définie et documentée mais jamais lue ; le footer `%peers%` s'affichait toujours dans l'ordre arbitraire de la DB. `expandPeers()` trie maintenant les peers selon l'ordre configuré, en ajoutant les peers inconnus à la fin.
+
+---
+
+## [1.5.4] - 2026-06-03
 
 ### Fixed
 

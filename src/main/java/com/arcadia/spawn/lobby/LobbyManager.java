@@ -71,7 +71,18 @@ public class LobbyManager {
             JsonElement json = GSON.fromJson(reader, JsonElement.class);
             if (json == null || !json.isJsonArray()) return false;
             for (JsonElement element : json.getAsJsonArray()) {
+                if (element == null || !element.isJsonObject()) continue;
                 JsonObject obj = element.getAsJsonObject();
+                // Validate required fields explicitly instead of relying on a thrown NPE from
+                // .get(missing).getAsX(). A single malformed entry is skipped rather than
+                // aborting the whole file (and falling through to backup recovery).
+                if (!obj.has("name") || !obj.has("dimension")
+                        || !obj.has("x") || !obj.has("y") || !obj.has("z")
+                        || !obj.has("yaw") || !obj.has("pitch")) {
+                    ArcadiaSpawnMod.LOGGER.warn("Skipping malformed lobby entry in {} (missing required field): {}",
+                            file.getName(), obj);
+                    continue;
+                }
                 LobbyLocation loc = LobbyLocation.of(
                         obj.get("name").getAsString(),
                         obj.get("dimension").getAsString(),

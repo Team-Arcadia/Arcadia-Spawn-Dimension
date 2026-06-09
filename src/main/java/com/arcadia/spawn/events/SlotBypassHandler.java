@@ -54,8 +54,16 @@ public class SlotBypassHandler {
                 return;
             }
         } catch (Exception e) {
-            ArcadiaSpawnMod.LOGGER.error("Error checking slot bypass for {}", player.getName().getString(), e);
-            return; // Fail-open
+            // Fail-CLOSED: a thrown permission check is an error condition (LuckPerms
+            // crashed, provider not bound, DB offline), not a grant. The slot limit is a
+            // resource control \u2014 letting an unverifiable player through would defeat it.
+            // arcadia-lib 1.2.14's permission backend is itself fail-closed (DENY), so a
+            // propagated exception always means "could not verify", never "allowed".
+            ArcadiaSpawnMod.LOGGER.error("Slot bypass check failed for {} \u2014 denying (fail-closed).",
+                    player.getName().getString(), e);
+            player.connection.disconnect(Component.literal(
+                    "\u00A7cPermission check failed, please reconnect.\n\u00A77V\u00E9rification des permissions \u00E9chou\u00E9e, reconnectez-vous."));
+            return;
         }
 
         String rawMessage = SlotBypassConfig.VALUES.kickMessage.get();

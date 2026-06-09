@@ -166,15 +166,16 @@ Every server runs an UPSERT heartbeat into its own row every `heartbeat_interval
 | Minecraft | 1.21.1 |
 | NeoForge | 21.1.219+ |
 | Java | 21 |
-| Arcadia Lib | bundled in the jar |
+| Arcadia Lib | **required** — install `arcadia-lib 1.2.14+` as a separate mod |
 | LuckPerms | optional (soft integration) |
 
 ## Installation
 
-1. Place `arcadia_spawn-1.5.4.jar` in your `mods/` folder. Arcadia Lib is bundled inside.
-2. (Optional) Install [LuckPerms](https://luckperms.net/) for permission-based features and weight-driven grade sorting.
-3. Start the server. On first launch, the mod creates `config/arcadia/spawn/config.toml`, `slot_bypass.toml`, `tablist.toml`, and the `lobbies/` folder.
-4. Edit `config.toml` to tune the dimension. Edit `tablist.toml` and set `enabled = true` to activate the custom tab list. Run `/arcadia_spawn reload` to apply lobby changes live.
+1. Install **[Arcadia Lib](https://github.com/Team-Arcadia) 1.2.14 or newer** in your `mods/` folder — it is a required dependency, not bundled.
+2. Place `arcadia_spawn-1.5.5.jar` in the same `mods/` folder.
+3. (Optional) Install [LuckPerms](https://luckperms.net/) for permission-based features and weight-driven grade sorting.
+4. Start the server. On first launch, the mod creates `config/arcadia/spawn/config.toml`, `slot_bypass.toml`, `tablist.toml`, and the `lobbies/` folder.
+5. Edit `config.toml` to tune the dimension. Edit `tablist.toml` and set `enabled = true` to activate the custom tab list. Run `/arcadia_spawn reload` to apply lobby changes live.
 
 ## Documentation
 
@@ -229,15 +230,16 @@ Arcadia Spawn est un mod Minecraft NeoForge qui transforme l'expérience de spaw
 | Minecraft | 1.21.1 |
 | NeoForge | 21.1.219+ |
 | Java | 21 |
-| Arcadia Lib | inclus dans le jar |
+| Arcadia Lib | **requis** — installez `arcadia-lib 1.2.14+` comme mod séparé |
 | LuckPerms | optionnel (intégration souple) |
 
 ## Installation
 
-1. Placez `arcadia_spawn-1.5.4.jar` dans votre dossier `mods/`. Arcadia Lib est inclus.
-2. (Optionnel) Installez [LuckPerms](https://luckperms.net/) pour les features basées permissions et le tri par weight.
-3. Démarrez le serveur. Au premier lancement, le mod crée `config/arcadia/spawn/config.toml`, `slot_bypass.toml`, `tablist.toml` et le dossier `lobbies/`.
-4. Éditez `config.toml` pour régler la dimension. Éditez `tablist.toml` et passez `enabled = true` pour activer la tab list. Lancez `/arcadia_spawn reload` pour appliquer les changements de lobby à chaud.
+1. Installez **[Arcadia Lib](https://github.com/Team-Arcadia) 1.2.14 ou plus récent** dans votre dossier `mods/` — c'est une dépendance requise, pas incluse.
+2. Placez `arcadia_spawn-1.5.5.jar` dans le même dossier `mods/`.
+3. (Optionnel) Installez [LuckPerms](https://luckperms.net/) pour les features basées permissions et le tri par weight.
+4. Démarrez le serveur. Au premier lancement, le mod crée `config/arcadia/spawn/config.toml`, `slot_bypass.toml`, `tablist.toml` et le dossier `lobbies/`.
+5. Éditez `config.toml` pour régler la dimension. Éditez `tablist.toml` et passez `enabled = true` pour activer la tab list. Lancez `/arcadia_spawn reload` pour appliquer les changements de lobby à chaud.
 
 ## Crédits
 
