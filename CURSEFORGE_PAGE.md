@@ -8,11 +8,11 @@
 
 <p>&nbsp;</p>
 
-<p style="text-align: center;"><img src="https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=flat-square&amp;logo=minecraft&amp;logoColor=white" alt="MC 1.21.1">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/NeoForge-21.1.219+-F16436?style=flat-square" alt="NeoForge">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/Java-21-007396?style=flat-square&amp;logo=openjdk&amp;logoColor=white" alt="Java 21">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/Arcadia_Lib-bundled-9C27B0?style=flat-square" alt="Arcadia Lib bundled">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/LuckPerms-optional-2196F3?style=flat-square" alt="LuckPerms optional">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/License-LGPL--3.0-55AA55?style=flat-square" alt="LGPL-3.0">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/Languages-EN%20%2F%20FR-2196F3?style=flat-square" alt="EN / FR"></p>
+<p style="text-align: center;"><img src="https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=flat-square&amp;logo=minecraft&amp;logoColor=white" alt="MC 1.21.1">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/NeoForge-21.1.219+-F16436?style=flat-square" alt="NeoForge">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/Java-21-007396?style=flat-square&amp;logo=openjdk&amp;logoColor=white" alt="Java 21">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/Arcadia_Lib-required_1.2.14+-9C27B0?style=flat-square" alt="Arcadia Lib required 1.2.14+">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/LuckPerms-optional-2196F3?style=flat-square" alt="LuckPerms optional">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/License-LGPL--3.0-55AA55?style=flat-square" alt="LGPL-3.0">&nbsp;&nbsp;&nbsp; <img src="https://img.shields.io/badge/Languages-EN%20%2F%20FR-2196F3?style=flat-square" alt="EN / FR"></p>
 
 <p>&nbsp;</p>
 
-<p style="text-align: center;"><img src="https://img.shields.io/badge/Stable_Release-v1.5.3-00cc00?style=for-the-badge" alt="Stable v1.5.3"></p>
+<p style="text-align: center;"><img src="https://img.shields.io/badge/Stable_Release-v1.5.5-00cc00?style=for-the-badge" alt="Stable v1.5.5"></p>
 
 <table style="margin-left: auto; margin-right: auto; max-width: 850px; border: 2px solid #55AA55; background-color: rgba(85, 170, 85, 0.15);">
 <tbody>
@@ -298,7 +298,7 @@ footer_lines = [
 </tr>
 <tr style="background-color: rgba(85, 170, 85, 0.10);">
 <td style="text-align: center; padding: 8px; border: 1px solid #55AA55;"><strong>Arcadia Lib</strong></td>
-<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;">bundled in the jar</td>
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;"><strong>required</strong> — 1.2.14+ (separate mod)</td>
 </tr>
 <tr>
 <td style="text-align: center; padding: 8px; border: 1px solid #55AA55;"><strong>LuckPerms</strong></td>
@@ -309,7 +309,7 @@ footer_lines = [
 
 <p>&nbsp;</p>
 
-<p style="text-align: center;"><em>Arcadia Lib ships inside the jar — no separate download. LuckPerms is fully optional; the mod falls back to vanilla OP checks when it's absent.</em></p>
+<p style="text-align: center;"><em>Arcadia Lib is a required dependency — install <strong>arcadia-lib 1.2.14 or newer</strong> as a separate mod in the same <code>mods/</code> folder. LuckPerms is fully optional; the mod falls back to vanilla OP checks when it's absent.</em></p>
 
 <p>&nbsp;</p>
 
@@ -467,7 +467,7 @@ footer_lines = [
 </tr>
 <tr style="background-color: rgba(85, 170, 85, 0.10);">
 <td style="text-align: center; padding: 8px; border: 1px solid #55AA55;"><strong>Arcadia Lib</strong></td>
-<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;">inclus dans le jar</td>
+<td style="text-align: center; padding: 8px; border: 1px solid #55AA55;"><strong>requis</strong> — 1.2.14+ (mod séparé)</td>
 </tr>
 <tr>
 <td style="text-align: center; padding: 8px; border: 1px solid #55AA55;"><strong>LuckPerms</strong></td>
@@ -478,7 +478,7 @@ footer_lines = [
 
 <p>&nbsp;</p>
 
-<p style="text-align: center;"><em>Arcadia Lib est livrée à l'intérieur du jar — aucun téléchargement séparé. LuckPerms est totalement optionnel ; le mod retombe sur les checks OP vanilla en son absence.</em></p>
+<p style="text-align: center;"><em>Arcadia Lib est une dépendance requise — installez <strong>arcadia-lib 1.2.14 ou plus récent</strong> comme mod séparé dans le même dossier <code>mods/</code>. LuckPerms est totalement optionnel ; le mod retombe sur les checks OP vanilla en son absence.</em></p>
 
 <p>&nbsp;</p>
 
