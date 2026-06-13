@@ -10,7 +10,7 @@ tasks.named('wrapper', Wrapper).configure {
     gradleVersion = '8.7'
 }
 
-version = '1.5.5'
+version = '1.5.6'
 group = 'com.arcadia.spawn'
 
 repositories {

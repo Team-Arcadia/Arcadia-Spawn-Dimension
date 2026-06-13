@@ -60,6 +60,12 @@ public class ModEvents {
         // TabList: sync team + send header/footer immediately so the player
         // doesn't see vanilla tab for a tick before the refresh.
         TabListManager.onPlayerJoin(player);
+
+        // Reconcile spectator visibility on join: covers a player relogging while in
+        // spectator (must be hidden) and a player relogging out of spectator while still
+        // flagged hidden from a previous session (must be revealed). The next refresh tick
+        // would catch it eventually, but doing it here avoids a visible delay.
+        SpectatorVisibility.reconcile(player.getServer());
     }
 
     @SubscribeEvent

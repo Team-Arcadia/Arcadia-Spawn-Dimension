@@ -4,7 +4,29 @@ All notable changes to Arcadia Spawn are documented here.
 
 ---
 
-## [1.5.5] - 2026-06-09 (latest)
+## [1.5.6] - 2026-06-13 (latest)
+
+### Fixed
+
+- **Staff stayed invisible after leaving spectator mode** — The spectator tab-list hider sent a `ClientboundPlayerInfoRemovePacket` to hide a spectator from everyone else's tab. That packet deletes the player's `PlayerInfo` on every other client — and the vanilla client then refuses to spawn that player's entity (`ClientPacketListener.createEntityFromPacket` null-checks the `PlayerInfo` and silently drops the spawn). So when a staff member returned to creative/survival, the re-add packet restored the tab row but their **entity** never re-appeared for anyone who re-tracked them, until a full re-track (relog, dimension change, leaving and re-entering view distance) happened. The hide/reveal mechanism now toggles the per-player `UPDATE_LISTED` flag instead (`listed=false` to hide the tab row, `listed=true` to restore it). The client keeps the `PlayerInfo` and the entity at all times, so the player stays rendered and the invisibility is gone.
+
+### Changed
+
+- **Spectator visibility reconciled on login** — `PlayerLoggedInEvent` now runs `SpectatorVisibility.reconcile()` so a player relogging while in spectator is hidden immediately, and a player relogging out of spectator is revealed immediately, instead of waiting for the next refresh tick.
+- **Access transformer exposes `ClientboundPlayerInfoUpdatePacket.entries`** — The vanilla public packet constructors hard-code `listed=true`, so a one-line AT makes the `entries` field writable, letting the mod emit a genuine `listed=false` update for a single player.
+
+### Correctifs
+
+- **Le staff restait invisible après être sorti du mode spectateur** — Le masquage des spectateurs dans le TAB envoyait un `ClientboundPlayerInfoRemovePacket` pour cacher un spectateur du TAB des autres. Ce paquet supprime la `PlayerInfo` du joueur sur tous les autres clients — et le client vanilla refuse alors de faire apparaître l'entité de ce joueur (`ClientPacketListener.createEntityFromPacket` vérifie la nullité de la `PlayerInfo` et abandonne silencieusement l'apparition). Ainsi, quand un membre du staff revenait en créatif/survie, le paquet de réajout restaurait la ligne du TAB mais son **entité** ne réapparaissait jamais pour quiconque le re-suivait, jusqu'à un re-suivi complet (reconnexion, changement de dimension, sortie puis retour dans la distance de vue). Le mécanisme cache/révèle bascule désormais le drapeau `UPDATE_LISTED` par joueur (`listed=false` pour masquer la ligne du TAB, `listed=true` pour la restaurer). Le client conserve la `PlayerInfo` et l'entité en permanence, donc le joueur reste affiché et l'invisibilité disparaît.
+
+### Modifications
+
+- **Visibilité spectateur réconciliée à la connexion** — `PlayerLoggedInEvent` exécute désormais `SpectatorVisibility.reconcile()` pour qu'un joueur qui se reconnecte en spectateur soit masqué immédiatement, et qu'un joueur qui se reconnecte hors spectateur soit révélé immédiatement, au lieu d'attendre le prochain tick de rafraîchissement.
+- **L'access transformer expose `ClientboundPlayerInfoUpdatePacket.entries`** — Les constructeurs publics vanilla du paquet forcent `listed=true` ; un AT d'une ligne rend donc le champ `entries` modifiable, permettant au mod d'émettre une véritable mise à jour `listed=false` pour un seul joueur.
+
+---
+
+## [1.5.5] - 2026-06-09
 
 ### Changed
 
