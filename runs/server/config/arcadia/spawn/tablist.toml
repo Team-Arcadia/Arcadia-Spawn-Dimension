@@ -1,0 +1,16 @@
+["TabList"]
+	enabled = true
+	server_display_name = "DevServer"
+	refresh_interval_ticks = 40
+	header_lines = ["&6&l>>>>>> &b&lArcadia &7- &f%server% &6&l<<<<<<", "&7Online: &a%online%&7/&a%max% &8| &7TPS: &a%tps% &8| &7Network: &a%cross_total%"]
+	footer_lines = ["&8 ", "%peers%", "&8 ", "&7Your ping: &a%player_ping%ms &8| &7Playtime: &a%player_playtime%"]
+
+["Group Sorting"]
+	group_sorting_enabled = true
+	show_luckperms_prefix = true
+
+["Cross-Server Sync"]
+	cross_server_enabled = false
+	heartbeat_interval_seconds = 10
+	peer_timeout_seconds = 45
+	peer_order = []

@@ -9,6 +9,7 @@ import com.arcadia.spawn.tablist.LuckPermsListener;
 import com.arcadia.spawn.tablist.SpectatorVisibility;
 import com.arcadia.spawn.tablist.TabListManager;
 import com.arcadia.spawn.util.RateLimiter;
+import com.arcadia.spawn.world.CustomDimensionPack;
 import com.arcadia.spawn.world.SpawnData;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -20,7 +21,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
@@ -98,8 +101,23 @@ public class ModEvents {
     }
 
     @SubscribeEvent
+    public static void onServerAboutToStart(ServerAboutToStartEvent event) {
+        // Runs before the levels are created, so a dimension folder deleted here cannot be
+        // reopened or recreated by a running ServerLevel. This is also the retry point for
+        // a purge the previous run was killed before finishing.
+        CustomDimensionPack.runPendingPurges(event.getServer());
+    }
+
+    @SubscribeEvent
     public static void onServerStopping(ServerStoppingEvent event) {
         TabListManager.onShutdown();
+    }
+
+    @SubscribeEvent
+    public static void onServerStopped(ServerStoppedEvent event) {
+        // Every level is closed and the save is unlocked by now, so the files are free.
+        // Doing it here means "delete + stop the server" leaves the save already clean.
+        CustomDimensionPack.runPendingPurges(event.getServer());
     }
 
     @SubscribeEvent

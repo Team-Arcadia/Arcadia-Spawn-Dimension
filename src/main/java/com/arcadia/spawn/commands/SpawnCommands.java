@@ -366,6 +366,14 @@ public class SpawnCommands {
             return 0;
         }
 
+        // A biome that does not exist makes the generated level stem unparseable, and the
+        // whole world then refuses to load on the next start. Reject it here, while the
+        // admin is still at the console, rather than at boot.
+        if (biome != null && !biome.isBlank() && !biomeExists(source, biome)) {
+            source.sendFailure(Component.literal("Unknown biome: " + biome).withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
         if (CustomDimensionManager.create(id, preset, biome)) {
             source.sendSuccess(() -> Component.literal("Created dimension '" + CustomDimensionManager.CUSTOM_NAMESPACE + ":" + id +
                     "'. RESTART THE SERVER for it to load.")
@@ -374,6 +382,14 @@ public class SpawnCommands {
         }
         source.sendFailure(Component.literal("Failed to create dimension. See logs.").withStyle(ChatFormatting.RED));
         return 0;
+    }
+
+    private static boolean biomeExists(CommandSourceStack source, String biome) {
+        net.minecraft.resources.ResourceLocation loc = net.minecraft.resources.ResourceLocation.tryParse(biome);
+        if (loc == null) return false;
+        return source.registryAccess()
+                .registryOrThrow(net.minecraft.core.registries.Registries.BIOME)
+                .containsKey(loc);
     }
 
     private static int deleteDimension(CommandContext<CommandSourceStack> ctx, boolean purge) {
@@ -396,9 +412,10 @@ public class SpawnCommands {
         }
 
         if (CustomDimensionManager.delete(id, purge)) {
-            String msg = "Deleted dimension '" + id + "'." + (purge ?
-                    " Purge marker written — manual cleanup of world/dimensions/" +
-                            CustomDimensionManager.CUSTOM_NAMESPACE + "/" + id + " required after shutdown."
+            String msg = "Deleted dimension '" + CustomDimensionManager.CUSTOM_NAMESPACE + ":" + id +
+                    "'. It stays loaded until the server restarts." + (purge ?
+                    " Its world data under world/dimensions/" + CustomDimensionManager.CUSTOM_NAMESPACE + "/" + id +
+                            " is deleted automatically when the server stops."
                     : " World data preserved.");
             source.sendSuccess(() -> Component.literal(msg).withStyle(ChatFormatting.GREEN), true);
             return 1;

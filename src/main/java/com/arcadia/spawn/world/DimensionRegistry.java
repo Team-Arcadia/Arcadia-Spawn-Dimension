@@ -1,41 +1,33 @@
 package com.arcadia.spawn.world;
 
 import com.arcadia.spawn.ArcadiaSpawnMod;
-import com.arcadia.spawn.config.SpawnConfig;
-import net.minecraft.core.Holder;
-import net.minecraft.core.HolderSet;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
-import net.minecraft.util.valueproviders.ConstantInt;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
-import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
-import net.minecraft.world.level.levelgen.structure.StructureSet;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.registries.RegisterEvent;
-import net.minecraft.world.level.levelgen.placement.PlacedFeature;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
-import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.OptionalLong;
 
-@EventBusSubscriber(modid = ArcadiaSpawnMod.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
-public class DimensionRegistry {
+/**
+ * Keys and shared world-shape helpers for the dimensions this mod owns.
+ *
+ * The built-in {@code arcadia:spawn} dimension is defined by the data pack shipped in
+ * the jar (data/arcadia/dimension/spawn.json + dimension_type/spawn.json). Custom
+ * dimensions are generated into a data pack by {@link CustomDimensionPack}.
+ *
+ * Nothing here registers anything through {@code RegisterEvent}: dimension types and
+ * level stems live in data pack registries, which are rebuilt from packs at every world
+ * load, and {@code RegisterEvent} only fires for the static registries listed in
+ * {@code BuiltInRegistries}. A {@code helper.register()} call for those keys is silently
+ * dropped, which is what kept custom dimensions from ever loading before 1.5.7.
+ */
+public final class DimensionRegistry {
 
     public static final ResourceKey<DimensionType> SPAWN_DIM_TYPE_KEY =
             ResourceKey.create(Registries.DIMENSION_TYPE, ResourceLocation.fromNamespaceAndPath("arcadia", "spawn"));
@@ -44,69 +36,40 @@ public class DimensionRegistry {
 
     private static final int MAX_TOTAL_HEIGHT = 2032;
 
-    // Memoized across the two register passes (DIMENSION_TYPE + LEVEL_STEM), populated
-    // inside the DIMENSION_TYPE register lambda when the config is guaranteed to be loaded.
-    private static DimensionType cachedSpawnDimType;
+    private DimensionRegistry() {}
 
-    @SubscribeEvent
-    public static void onRegister(RegisterEvent event) {
-        event.register(Registries.DIMENSION_TYPE, helper -> {
-            cachedSpawnDimType = createDimensionType();
-            helper.register(SPAWN_DIM_TYPE_KEY, cachedSpawnDimType);
-            CustomDimensionManager.registerAllDimensionTypes(helper);
-        });
-
-        event.register(Registries.LEVEL_STEM, helper -> {
-            ResourceLocation biomeId;
-            try {
-                biomeId = ResourceLocation.parse(SpawnConfig.COMMON.biome.get());
-            } catch (Exception e) {
-                ArcadiaSpawnMod.LOGGER.error("Invalid biome config: '{}'. Using default.", SpawnConfig.COMMON.biome.get(), e);
-                biomeId = ResourceLocation.fromNamespaceAndPath("minecraft", "the_void");
-            }
-
-            @SuppressWarnings("unchecked")
-            Registry<Biome> biomeRegistry = (Registry<Biome>) BuiltInRegistries.REGISTRY.get(Registries.BIOME.location());
-            if (biomeRegistry == null) throw new RuntimeException("Biome Registry not found!");
-
-            ResourceLocation finalBiomeId = biomeId;
-            Holder.Reference<Biome> biomeHolder = biomeRegistry.getHolder(ResourceKey.create(Registries.BIOME, biomeId))
-                    .orElseGet(() -> {
-                        ArcadiaSpawnMod.LOGGER.error("Biome '{}' not found. Using default.", finalBiomeId);
-                        return biomeRegistry.getHolderOrThrow(Biomes.THE_VOID);
-                    });
-
-            List<FlatLayerInfo> layers = parseLayersSafe(SpawnConfig.COMMON.flatLayers.get());
-            if (layers.isEmpty()) {
-                ArcadiaSpawnMod.LOGGER.warn("No valid layers. Using default bedrock layer.");
-                layers.add(new FlatLayerInfo(1, Blocks.BEDROCK));
-            }
-
-            Holder<PlacedFeature> emptyFeature = emptyPlacedFeature();
-
-            FlatLevelGeneratorSettings settings = createSettings(
-                    Optional.empty(), layers, false,
-                    SpawnConfig.COMMON.latesAndFeatures.get(),
-                    Optional.of(biomeHolder), biomeHolder,
-                    emptyFeature, emptyFeature);
-
-            DimensionType dimType = cachedSpawnDimType != null ? cachedSpawnDimType : createDimensionType();
-            FlatLevelSource source = new FlatLevelSource(settings);
-            LevelStem stem = new LevelStem(Holder.direct(dimType), source);
-            helper.register(SPAWN_LEVEL_STEM_KEY, stem);
-
-            CustomDimensionManager.registerAllLevelStems(helper, biomeRegistry);
-        });
+    /**
+     * Clamps min_y to Minecraft's hard limits so an out-of-range value can't
+     * break dimension loading. A DimensionType requires min_y to be a multiple
+     * of 16, min_y &gt;= -MAX_TOTAL_HEIGHT, and min_y + height &lt;= MAX_TOTAL_HEIGHT.
+     */
+    public static int clampMinY(int minY, int height) {
+        if ((minY & 15) != 0) {
+            int snapped = (minY >> 4) << 4; // floor toward -inf, stays a multiple of 16
+            ArcadiaSpawnMod.LOGGER.warn("min_y {} must be a multiple of 16, snapped to {}.", minY, snapped);
+            minY = snapped;
+        }
+        if (minY < -MAX_TOTAL_HEIGHT) {
+            ArcadiaSpawnMod.LOGGER.warn("min_y {} below floor {}, clamping.", minY, -MAX_TOTAL_HEIGHT);
+            minY = -MAX_TOTAL_HEIGHT;
+        }
+        if (minY + height > MAX_TOTAL_HEIGHT) {
+            int newMinY = ((MAX_TOTAL_HEIGHT - height) >> 4) << 4;
+            ArcadiaSpawnMod.LOGGER.warn("min_y {} + height {} exceeds {}, lowering min_y to {}.",
+                    minY, height, MAX_TOTAL_HEIGHT, newMinY);
+            minY = newMinY;
+        }
+        return minY;
     }
 
-    public static Holder<PlacedFeature> emptyPlacedFeature() {
-        return Holder.direct(new PlacedFeature(
-                Holder.direct(new ConfiguredFeature<>(Feature.NO_OP, NoneFeatureConfiguration.INSTANCE)),
-                List.of()));
-    }
-
-    private static List<FlatLayerInfo> parseLayersSafe(List<? extends String> layerStrings) {
+    /**
+     * Parses "count*block_id" layer entries into flat-world layers, dropping the entries
+     * whose block does not resolve so one typo costs a layer instead of a world load.
+     */
+    public static List<FlatLayerInfo> parseLayersPublic(List<? extends String> layerStrings) {
         List<FlatLayerInfo> layers = new ArrayList<>();
+        if (layerStrings == null) return layers;
+
         for (String s : layerStrings) {
             try {
                 String[] split = s.split("\\*");
@@ -140,124 +103,5 @@ public class DimensionRegistry {
             }
         }
         return layers;
-    }
-
-    private static DimensionType createDimensionType() {
-        int minY = SpawnConfig.COMMON.minY.get();
-        int height = SpawnConfig.COMMON.height.get();
-        int logicalHeight = SpawnConfig.COMMON.logicalHeight.get();
-
-        // Anti-corruption clamps — Minecraft hard limits
-        if (height > MAX_TOTAL_HEIGHT) {
-            ArcadiaSpawnMod.LOGGER.warn("Dimension height {} exceeds max {}, clamping.", height, MAX_TOTAL_HEIGHT);
-            height = MAX_TOTAL_HEIGHT;
-        }
-        if (logicalHeight > height) {
-            ArcadiaSpawnMod.LOGGER.warn("logical_height {} > height {}, clamping.", logicalHeight, height);
-            logicalHeight = height;
-        }
-        if ((height & 15) != 0) {
-            height = (height >> 4) << 4;
-            ArcadiaSpawnMod.LOGGER.warn("height must be multiple of 16, snapped to {}.", height);
-        }
-        minY = clampMinY(minY, height);
-
-        return new DimensionType(
-                SpawnConfig.COMMON.timeLocked.get() ? OptionalLong.of(SpawnConfig.COMMON.fixedTime.get()) : OptionalLong.empty(),
-                SpawnConfig.COMMON.hasSkylight.get(),
-                SpawnConfig.COMMON.hasCeiling.get(),
-                SpawnConfig.COMMON.ultrawarm.get(),
-                SpawnConfig.COMMON.natural.get(),
-                SpawnConfig.COMMON.coordinateScale.get(),
-                SpawnConfig.COMMON.bedWorks.get(),
-                SpawnConfig.COMMON.respawnAnchorWorks.get(),
-                minY,
-                height,
-                logicalHeight,
-                TagKey.create(Registries.BLOCK, ResourceLocation.parse(SpawnConfig.COMMON.infiniburn.get())),
-                ResourceLocation.parse(SpawnConfig.COMMON.effects.get()),
-                SpawnConfig.COMMON.ambientLight.get().floatValue(),
-                new DimensionType.MonsterSettings(
-                        SpawnConfig.COMMON.piglinSafe.get(),
-                        SpawnConfig.COMMON.hasRaids.get(),
-                        ConstantInt.of(SpawnConfig.COMMON.monsterSpawnLightLevel.get()),
-                        SpawnConfig.COMMON.monsterSpawnBlockLightLimit.get()));
-    }
-
-    /**
-     * Clamps min_y to Minecraft's hard limits so an out-of-range config value can't
-     * crash dimension registration. A DimensionType requires min_y to be a multiple
-     * of 16, min_y &gt;= -MAX_TOTAL_HEIGHT, and min_y + height &lt;= MAX_TOTAL_HEIGHT.
-     */
-    public static int clampMinY(int minY, int height) {
-        if ((minY & 15) != 0) {
-            int snapped = (minY >> 4) << 4; // floor toward -inf, stays a multiple of 16
-            ArcadiaSpawnMod.LOGGER.warn("min_y {} must be a multiple of 16, snapped to {}.", minY, snapped);
-            minY = snapped;
-        }
-        if (minY < -MAX_TOTAL_HEIGHT) {
-            ArcadiaSpawnMod.LOGGER.warn("min_y {} below floor {}, clamping.", minY, -MAX_TOTAL_HEIGHT);
-            minY = -MAX_TOTAL_HEIGHT;
-        }
-        if (minY + height > MAX_TOTAL_HEIGHT) {
-            int newMinY = ((MAX_TOTAL_HEIGHT - height) >> 4) << 4;
-            ArcadiaSpawnMod.LOGGER.warn("min_y {} + height {} exceeds {}, lowering min_y to {}.",
-                    minY, height, MAX_TOTAL_HEIGHT, newMinY);
-            minY = newMinY;
-        }
-        return minY;
-    }
-
-    // Reflection constructor resolved lazily on first call (not <clinit>) — some
-    // NeoForge dev environments apply access transformers after class init, so
-    // resolving at static-init time can fail with NoSuchMethodException even
-    // though the same lookup at RegisterEvent time succeeds.
-    private static volatile java.lang.reflect.Constructor<FlatLevelGeneratorSettings> FLAT_SETTINGS_CTOR;
-
-    private static java.lang.reflect.Constructor<FlatLevelGeneratorSettings> flatSettingsCtor() {
-        var local = FLAT_SETTINGS_CTOR;
-        if (local != null) return local;
-        synchronized (DimensionRegistry.class) {
-            local = FLAT_SETTINGS_CTOR;
-            if (local != null) return local;
-            // Match by arity + leading types rather than exact strict signatures so we are
-            // robust against minor mapping differences in the dev environment.
-            for (var c : FlatLevelGeneratorSettings.class.getDeclaredConstructors()) {
-                Class<?>[] p = c.getParameterTypes();
-                if (p.length == 8
-                        && p[0] == Optional.class
-                        && p[1] == List.class
-                        && p[2] == boolean.class
-                        && p[3] == boolean.class
-                        && p[4] == Optional.class
-                        && Holder.class.isAssignableFrom(p[5])
-                        && Holder.class.isAssignableFrom(p[6])
-                        && Holder.class.isAssignableFrom(p[7])) {
-                    c.setAccessible(true);
-                    @SuppressWarnings("unchecked")
-                    var picked = (java.lang.reflect.Constructor<FlatLevelGeneratorSettings>) c;
-                    FLAT_SETTINGS_CTOR = picked;
-                    return picked;
-                }
-            }
-            throw new RuntimeException("FlatLevelGeneratorSettings 8-arg ctor not found");
-        }
-    }
-
-    public static FlatLevelGeneratorSettings createSettings(
-            Optional<HolderSet<StructureSet>> structureOverrides,
-            List<FlatLayerInfo> layers, boolean addLakes, boolean addFeatures,
-            Optional<Holder<Biome>> biome, Holder.Reference<Biome> biomeFallback,
-            Holder<PlacedFeature> lakeFeature, Holder<PlacedFeature> lavaLakeFeature) {
-        try {
-            return flatSettingsCtor().newInstance(structureOverrides, layers, addLakes, addFeatures,
-                    biome, biomeFallback, lakeFeature, lavaLakeFeature);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create FlatLevelGeneratorSettings", e);
-        }
-    }
-
-    public static List<FlatLayerInfo> parseLayersPublic(List<? extends String> layerStrings) {
-        return parseLayersSafe(layerStrings);
     }
 }

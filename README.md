@@ -16,8 +16,8 @@ Arcadia Spawn is a NeoForge Minecraft mod that turns the spawn experience into a
 - **Spectator hide** — Players in `/gamemode spectator` are hidden from the tab list of non-spectators. Other spectators still see each other so co-moderation works. Server-authoritative, opt-in via config (default on).
 - **Hide ping icons** — Client-side mixin cancels the rendering of the latency signal-bar icons next to player names for a cleaner tab. Opt-in via config.
 - **Cross-server player count** — When `cross_server_enabled = true` and the arcadia-lib database is reachable, every server heartbeats its row into a shared `arcadia_tablist_servers` table and reads the others. The `%peers%` footer line auto-expands into one row per server with ALIVE / STALE flags. Stale peers (no heartbeat for `peer_timeout_seconds`) are rendered as offline. All JDBC goes through `DatabaseManager.executeAsync` — the main server thread never blocks.
-- **Custom dimensions on demand** — `/arcadia_spawn dimension create <id> [preset] [biome]`, `/arcadia_spawn dimension delete <id> [purge]`, `/arcadia_spawn dimension list`. Definitions are stored as JSON under `config/arcadia/spawn/dimensions/<id>.json` and registered at server startup under the `arcadia_custom:` namespace. Presets ship for `flat`, `void`, `lobby`.
-- **Mod-removal manifest** — A `_manifest.json` is auto-written next to dimension files listing every custom dimension owned by the mod. Deleting with `purge=true` writes a `_purge_<id>.marker` so admins can audit world data after shutdown.
+- **Custom dimensions on demand** — `/arcadia_spawn dimension create <id> [preset] [biome]`, `/arcadia_spawn dimension delete <id> [purge]`, `/arcadia_spawn dimension list`. Definitions are stored as JSON under `config/arcadia/spawn/dimensions/<id>.json`, compiled into a generated data pack at server startup and loaded under the `arcadia_custom:` namespace. Presets ship for `flat`, `void`, `lobby`.
+- **Mod-removal manifest** — A `_manifest.json` is auto-written next to dimension files listing every custom dimension owned by the mod. Deleting with `purge=true` records a `_purge_<id>.marker` and the world data under `<world>/dimensions/arcadia_custom/<id>/` is deleted on shutdown, retried at the next startup if the server died first.
 - **Slot bypass** — Permission-based slot bypass. Players with `arcadia_spawn.slots.bypass` (LuckPerms) bypass the slot limit when the server is full. Mixin-based fake max slots in the server list and optional join / leave message hiding.
 - **Per-command permission nodes** — Each admin subcommand has its own NeoForge `PermissionNode` (LuckPerms-compatible), with an op-level fallback when no permission backend is installed. Hides unauthorized subcommands from tab-completion.
 - **Strict input validation** — Lobby names and dimension ids are matched against a regex and a Windows-reserved-name blocklist (`CON`, `NUL`, `AUX`…) before any disk write. Descriptions are length-clamped and stripped of control characters. Prevents path-traversal and filename injection.
@@ -49,7 +49,7 @@ Arcadia Spawn is a NeoForge Minecraft mod that turns the spawn experience into a
 | `tp <name>` | 2 | Teleport directly to a warp (admin). |
 | `setspawn` | 2 | Set the spawn at the current position (records dimension). |
 | `dimension create <id> [preset] [biome]` | 4 | Create a custom dimension. Restart required for it to load. |
-| `dimension delete <id> [purge]` | 4 | Delete a custom dimension definition. `purge=true` writes a cleanup marker. |
+| `dimension delete <id> [purge]` | 4 | Delete a custom dimension definition. `purge=true` also deletes its world data on shutdown. |
 | `dimension list` | 2 | List all custom dimensions with their load status. |
 | `tablist reload` | 2 | Force refresh of header / footer for every online player. |
 | `tablist status` | 2 | Show tab list state (enabled, LP detected, DB available, server id). |
@@ -122,9 +122,11 @@ Server tick: TeleportHelper.tick (short-circuits when empty)
 # • arcadia_custom:myworld [LOADED]
 
 /arcadia_spawn dimension delete myworld true
-# Definition removed. _purge_myworld.marker written — manually delete
-# <world>/dimensions/arcadia_custom/myworld after shutdown.
+# Definition removed. The dimension stays loaded until the restart, and
+# <world>/dimensions/arcadia_custom/myworld is deleted when the server stops.
 ```
+
+The definitions in `config/arcadia/spawn/dimensions/` are the files you edit. They are compiled at every startup into a generated data pack under `config/arcadia/spawn/generated/custom_dimensions/`, which is what Minecraft actually reads — that folder is rewritten from scratch on every create and delete, so do not edit it by hand.
 
 Presets shipped: `flat` (default — bedrock + dirt + grass), `void` (a single air layer in `the_void`), `lobby` (bedrock + stone + smooth quartz floor, time-locked at noon, sky enabled).
 
@@ -172,7 +174,7 @@ Every server runs an UPSERT heartbeat into its own row every `heartbeat_interval
 ## Installation
 
 1. Install **[Arcadia Lib](https://github.com/Team-Arcadia) 1.2.14 or newer** in your `mods/` folder — it is a required dependency, not bundled.
-2. Place `arcadia_spawn-1.5.5.jar` in the same `mods/` folder.
+2. Place `arcadia_spawn-1.5.7.jar` in the same `mods/` folder.
 3. (Optional) Install [LuckPerms](https://luckperms.net/) for permission-based features and weight-driven grade sorting.
 4. Start the server. On first launch, the mod creates `config/arcadia/spawn/config.toml`, `slot_bypass.toml`, `tablist.toml`, and the `lobbies/` folder.
 5. Edit `config.toml` to tune the dimension. Edit `tablist.toml` and set `enabled = true` to activate the custom tab list. Run `/arcadia_spawn reload` to apply lobby changes live.
@@ -236,7 +238,7 @@ Arcadia Spawn est un mod Minecraft NeoForge qui transforme l'expérience de spaw
 ## Installation
 
 1. Installez **[Arcadia Lib](https://github.com/Team-Arcadia) 1.2.14 ou plus récent** dans votre dossier `mods/` — c'est une dépendance requise, pas incluse.
-2. Placez `arcadia_spawn-1.5.5.jar` dans le même dossier `mods/`.
+2. Placez `arcadia_spawn-1.5.7.jar` dans le même dossier `mods/`.
 3. (Optionnel) Installez [LuckPerms](https://luckperms.net/) pour les features basées permissions et le tri par weight.
 4. Démarrez le serveur. Au premier lancement, le mod crée `config/arcadia/spawn/config.toml`, `slot_bypass.toml`, `tablist.toml` et le dossier `lobbies/`.
 5. Éditez `config.toml` pour régler la dimension. Éditez `tablist.toml` et passez `enabled = true` pour activer la tab list. Lancez `/arcadia_spawn reload` pour appliquer les changements de lobby à chaud.

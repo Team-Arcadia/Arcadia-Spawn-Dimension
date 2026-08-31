@@ -4,7 +4,35 @@ All notable changes to Arcadia Spawn are documented here.
 
 ---
 
-## [1.5.6] - 2026-06-13 (latest)
+## [1.5.7] - 2026-08-31 (latest)
+
+### Fixed
+
+- **Custom dimensions never loaded, and `/arcadia_spawn dimension list` was always empty after a restart** — `DimensionRegistry` registered the level stems and dimension types through `RegisterEvent`. That event only fires for the static registries listed in `BuiltInRegistries`, and `dimension` / `dimension_type` are **data pack** registries, rebuilt from data packs at every world load. Both `event.register(...)` callbacks were therefore dead code: they never ran, so no custom dimension was ever created, and the `loadAll()` call that lived inside one of them never ran either — which is why the definitions map stayed empty and `list` reported zero dimensions even with JSON files sitting in `config/arcadia/spawn/dimensions/`. Definitions are now compiled into a real server data pack under `config/arcadia/spawn/generated/custom_dimensions/` and injected through `AddPackFindersEvent`, the same mechanism that already loads the built-in `arcadia:spawn` dimension. A dimension created with `/arcadia_spawn dimension create` is a genuine, enterable level after the restart the command asks for.
+- **`/arcadia_spawn dimension delete <id> true` did not delete anything** — The purge branch only wrote a `_purge_<id>.marker` file and told the admin to clean the save by hand, so the dimension survived every attempt to remove it. The marker is now acted upon: the save data under `<world>/dimensions/arcadia_custom/<id>/` is deleted on server shutdown, once every level is closed and the save is unlocked, and the deletion is retried at the next startup before the levels are created if the server died in between. The generated pack is also rewritten from scratch on every create and delete, so a removed definition can no longer leave an orphaned dimension behind.
+- **A purge scheduled for an id that was re-created afterwards wiped the new dimension** — `create` now clears any pending purge marker for that id, so re-using a name never destroys the world data of the dimension that now owns it.
+- **An unknown biome broke the whole world load instead of one dimension** — `/arcadia_spawn dimension create <id> <preset> <biome>` accepted any syntactically valid id. A biome that does not exist makes the generated level stem unparseable, which aborts the world load on the next start. The biome is now checked against the server registry while the admin is still at the console, and every value written into the pack is clamped or replaced by a safe default (coordinate scale, ambient light, monster spawn light, `min_y`/`height`/`logical_height`, infiniburn tag, effects id).
+
+### Changed
+
+- **`DimensionRegistry` no longer pretends to register anything** — The class is reduced to the two helpers that are actually used (`clampMinY`, layer parsing) plus the dimension keys. The reflection lookup for the `FlatLevelGeneratorSettings` constructor is gone with the dead registration path that needed it.
+- **`delete` reports what really happens** — The message now states that the dimension stays loaded until the restart and that the world data is deleted automatically on shutdown, instead of asking for a manual cleanup that the marker file never performed.
+
+### Correctifs
+
+- **Les dimensions personnalisées ne se chargeaient jamais, et `/arcadia_spawn dimension list` était toujours vide après un redémarrage** — `DimensionRegistry` enregistrait les level stems et les dimension types via `RegisterEvent`. Cet événement n'est déclenché que pour les registres statiques listés dans `BuiltInRegistries`, or `dimension` et `dimension_type` sont des registres de **data pack**, reconstruits depuis les data packs à chaque chargement de monde. Les deux callbacks `event.register(...)` étaient donc du code mort : ils ne s'exécutaient jamais, aucune dimension personnalisée n'était créée, et l'appel à `loadAll()` placé à l'intérieur de l'un d'eux ne s'exécutait pas davantage — d'où la table de définitions vide et le `list` annonçant zéro dimension alors que les fichiers JSON étaient bien présents dans `config/arcadia/spawn/dimensions/`. Les définitions sont désormais compilées en un vrai data pack serveur sous `config/arcadia/spawn/generated/custom_dimensions/` et injectées via `AddPackFindersEvent`, le mécanisme qui charge déjà la dimension intégrée `arcadia:spawn`. Une dimension créée avec `/arcadia_spawn dimension create` est un niveau réel et accessible après le redémarrage demandé par la commande.
+- **`/arcadia_spawn dimension delete <id> true` ne supprimait rien** — La branche purge se contentait d'écrire un fichier `_purge_<id>.marker` et de demander à l'admin de nettoyer la sauvegarde à la main, si bien que la dimension survivait à toutes les tentatives de suppression. Le marqueur est maintenant traité : les données sous `<world>/dimensions/arcadia_custom/<id>/` sont supprimées à l'arrêt du serveur, une fois tous les niveaux fermés et la sauvegarde déverrouillée, et la suppression est retentée au démarrage suivant avant la création des niveaux si le serveur est mort entre-temps. Le data pack généré est également réécrit intégralement à chaque création et suppression, donc une définition retirée ne peut plus laisser une dimension orpheline.
+- **Une purge programmée pour un id recréé ensuite effaçait la nouvelle dimension** — `create` supprime désormais le marqueur de purge en attente pour cet id, donc réutiliser un nom ne détruit jamais les données du monde de la dimension qui le porte maintenant.
+- **Un biome inconnu cassait tout le chargement du monde au lieu d'une seule dimension** — `/arcadia_spawn dimension create <id> <preset> <biome>` acceptait n'importe quel identifiant syntaxiquement valide. Un biome inexistant rend le level stem généré illisible, ce qui interrompt le chargement du monde au démarrage suivant. Le biome est désormais vérifié contre le registre du serveur pendant que l'admin est encore à la console, et chaque valeur écrite dans le pack est bornée ou remplacée par une valeur sûre (échelle de coordonnées, ambient light, niveau de lumière de spawn des monstres, `min_y`/`height`/`logical_height`, tag infiniburn, identifiant d'effets).
+
+### Modifications
+
+- **`DimensionRegistry` ne prétend plus enregistrer quoi que ce soit** — La classe est réduite aux deux helpers réellement utilisés (`clampMinY`, parsing des couches) et aux clés de dimension. La recherche par réflexion du constructeur de `FlatLevelGeneratorSettings` disparaît avec le chemin d'enregistrement mort qui en avait besoin.
+- **`delete` décrit ce qui se passe vraiment** — Le message indique désormais que la dimension reste chargée jusqu'au redémarrage et que les données du monde sont supprimées automatiquement à l'arrêt, au lieu de réclamer un nettoyage manuel que le fichier marqueur n'effectuait jamais.
+
+---
+
+## [1.5.6] - 2026-06-13
 
 ### Fixed
 

@@ -13,6 +13,7 @@ import com.arcadia.spawn.registry.AttachmentRegistry;
 import com.arcadia.spawn.registry.SpawnModMenus;
 import com.arcadia.spawn.tablist.CrossServerDb;
 import com.arcadia.spawn.tablist.TabListConfig;
+import com.arcadia.spawn.world.CustomDimensionManager;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -56,6 +57,11 @@ public class ArcadiaSpawnMod {
         event.enqueueWork(() -> {
             LobbyManager.init();
             LocalizationManager.init();
+
+            // Read the custom dimension definitions early so /arcadia_spawn dimension list
+            // reports what is on disk even if the pack finder never ran (client, or a
+            // startup that failed before the server pack repository was built).
+            CustomDimensionManager.loadAll();
 
             // Register hub card — row 0, sortOrder 0, tabIndex -1 (custom click handler)
             ArcadiaModRegistry.registerCard(new ArcadiaModCard(

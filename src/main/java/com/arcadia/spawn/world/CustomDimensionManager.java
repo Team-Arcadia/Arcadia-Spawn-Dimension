@@ -4,25 +4,11 @@ import com.arcadia.spawn.ArcadiaSpawnMod;
 import com.arcadia.spawn.util.InputValidation;
 import com.arcadia.spawn.util.SafeFileIO;
 import com.google.gson.*;
-import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
-import net.minecraft.util.valueproviders.ConstantInt;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
-import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
-import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.neoforged.fml.loading.FMLPaths;
-import net.neoforged.neoforge.registries.RegisterEvent;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,11 +18,18 @@ import java.nio.file.Path;
 import java.util.*;
 
 /**
- * Manages user-created custom dimensions ("arcadia_custom:<id>").
+ * Manages user-created custom dimensions ("arcadia_custom:&lt;id&gt;").
  *
- * Definitions are JSON files under config/arcadia/spawn/dimensions/.
- * Loaded once at game startup (RegisterEvent); creation requires server restart
- * to take effect — this is a NeoForge constraint, not a design choice.
+ * Definitions are JSON files under config/arcadia/spawn/dimensions/. They are the
+ * source of truth an admin edits; the JSON Minecraft actually reads is derived from
+ * them by {@link CustomDimensionPack}, which emits a real data pack and hands it to
+ * the server pack repository at startup.
+ *
+ * Dimension types and level stems live in DATA PACK registries. Those are rebuilt
+ * from data packs on every world load and are never visited by {@code RegisterEvent},
+ * which only fires for the static registries in {@code BuiltInRegistries}. That is also
+ * why creation requires a server restart: the level stem has to exist before the server
+ * builds its levels.
  *
  * Manifest (_manifest.json) tracks all dimensions owned by this mod, so an admin
  * can audit / purge them after mod removal.
@@ -51,6 +44,13 @@ public final class CustomDimensionManager {
     private static final Path DIMENSIONS_DIR = FMLPaths.CONFIGDIR.get().resolve("arcadia/spawn/dimensions");
     private static final Path MANIFEST = DIMENSIONS_DIR.resolve("_manifest.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
+    private static final String PURGE_PREFIX = "_purge_";
+    private static final String PURGE_SUFFIX = ".marker";
+
+    private static final String DEFAULT_INFINIBURN = "#minecraft:infiniburn_overworld";
+    private static final String DEFAULT_EFFECTS = "minecraft:overworld";
+    private static final String DEFAULT_BIOME = "minecraft:the_void";
 
     private static final Map<String, CustomDimensionDef> DEFINITIONS = new LinkedHashMap<>();
     private static boolean loaded = false;
@@ -72,6 +72,7 @@ public final class CustomDimensionManager {
                 stream
                         .filter(p -> p.toString().endsWith(".json"))
                         .filter(p -> !p.getFileName().toString().startsWith("_"))
+                        .sorted()
                         .forEach(CustomDimensionManager::loadOne);
             }
 
@@ -94,7 +95,7 @@ public final class CustomDimensionManager {
                 return;
             }
             if (!InputValidation.isValidDimensionId(def.id)) {
-                ArcadiaSpawnMod.LOGGER.warn("Skipping dimension with invalid id '{}'", def.id);
+                ArcadiaSpawnMod.LOGGER.warn("Skipping dimension with invalid id {}", def.id);
                 return;
             }
             DEFINITIONS.put(def.id, def);
@@ -121,89 +122,14 @@ public final class CustomDimensionManager {
         }
     }
 
-    public static void registerAllDimensionTypes(RegisterEvent.RegisterHelper<DimensionType> helper) {
-        loadAll();
-        for (CustomDimensionDef def : DEFINITIONS.values()) {
-            try {
-                ResourceKey<DimensionType> key = ResourceKey.create(Registries.DIMENSION_TYPE,
-                        ResourceLocation.fromNamespaceAndPath(CUSTOM_NAMESPACE, def.id));
-                helper.register(key, buildDimensionType(def));
-            } catch (Exception e) {
-                ArcadiaSpawnMod.LOGGER.error("Failed to register dimension type {}", def.id, e);
-            }
-        }
-    }
-
-    public static void registerAllLevelStems(RegisterEvent.RegisterHelper<LevelStem> helper, Registry<Biome> biomeRegistry) {
-        for (CustomDimensionDef def : DEFINITIONS.values()) {
-            try {
-                ResourceKey<LevelStem> stemKey = ResourceKey.create(Registries.LEVEL_STEM,
-                        ResourceLocation.fromNamespaceAndPath(CUSTOM_NAMESPACE, def.id));
-                helper.register(stemKey, buildLevelStem(def, biomeRegistry));
-            } catch (Exception e) {
-                ArcadiaSpawnMod.LOGGER.error("Failed to register level stem for {}", def.id, e);
-            }
-        }
-    }
-
-    private static DimensionType buildDimensionType(CustomDimensionDef def) {
-        int height = clampHeight(def.height);
-        int logicalHeight = Math.min(def.logicalHeight, height);
-        int minY = DimensionRegistry.clampMinY(def.minY, height);
-
-        return new DimensionType(
-                def.timeLocked ? OptionalLong.of(def.fixedTime) : OptionalLong.empty(),
-                def.hasSkylight, def.hasCeiling, def.ultrawarm, def.natural,
-                def.coordinateScale, def.bedWorks, def.respawnAnchorWorks,
-                minY, height, logicalHeight,
-                TagKey.create(Registries.BLOCK, ResourceLocation.parse(def.infiniburn)),
-                ResourceLocation.parse(def.effects),
-                (float) def.ambientLight,
-                new DimensionType.MonsterSettings(def.piglinSafe, def.hasRaids,
-                        ConstantInt.of(def.monsterSpawnLightLevel), def.monsterSpawnBlockLightLimit)
-        );
-    }
-
-    private static LevelStem buildLevelStem(CustomDimensionDef def, Registry<Biome> biomeRegistry) {
-        ResourceLocation biomeId;
-        try {
-            biomeId = ResourceLocation.parse(def.biome);
-        } catch (Exception e) {
-            biomeId = ResourceLocation.fromNamespaceAndPath("minecraft", "the_void");
-        }
-
-        ResourceLocation finalBiomeId = biomeId;
-        Holder.Reference<Biome> biomeHolder = biomeRegistry.getHolder(ResourceKey.create(Registries.BIOME, biomeId))
-                .orElseGet(() -> {
-                    ArcadiaSpawnMod.LOGGER.warn("Biome '{}' missing for custom dim {}, using void.", finalBiomeId, def.id);
-                    return biomeRegistry.getHolderOrThrow(Biomes.THE_VOID);
-                });
-
-        List<FlatLayerInfo> layers = DimensionRegistry.parseLayersPublic(def.layers);
-        if (layers.isEmpty()) layers.add(new FlatLayerInfo(1, Blocks.BEDROCK));
-
-        Holder<PlacedFeature> empty = DimensionRegistry.emptyPlacedFeature();
-        FlatLevelGeneratorSettings settings = DimensionRegistry.createSettings(
-                Optional.empty(), layers, false, def.generateFeatures,
-                Optional.of(biomeHolder), biomeHolder, empty, empty);
-
-        return new LevelStem(Holder.direct(buildDimensionType(def)), new FlatLevelSource(settings));
-    }
-
-    private static int clampHeight(int h) {
-        if (h > 2032) h = 2032;
-        if (h < 16) h = 16;
-        return (h >> 4) << 4;
-    }
-
     // ── Create / Delete / List API (runtime — requires restart to apply) ───
 
     public static synchronized boolean exists(String id) {
         return DEFINITIONS.containsKey(id) || Files.exists(DIMENSIONS_DIR.resolve(id + ".json"));
     }
 
-    public static Collection<CustomDimensionDef> list() {
-        return Collections.unmodifiableCollection(DEFINITIONS.values());
+    public static synchronized Collection<CustomDimensionDef> list() {
+        return List.copyOf(DEFINITIONS.values());
     }
 
     /** Creates a dimension definition file. Returns false if id is taken or invalid. */
@@ -224,7 +150,12 @@ public final class CustomDimensionManager {
             Path file = DIMENSIONS_DIR.resolve(id + ".json");
             SafeFileIO.writeAtomicWithBackup(file, GSON.toJson(def));
             DEFINITIONS.put(id, def);
+            // An id can be re-created after a "delete <id> true" whose purge has not run
+            // yet. Drop that pending purge, or the next startup would wipe the world data
+            // of the dimension we just re-created.
+            cancelPurge(id);
             writeManifest();
+            CustomDimensionPack.regenerate();
             return true;
         } catch (IOException e) {
             ArcadiaSpawnMod.LOGGER.error("Failed to create dimension {}", id, e);
@@ -233,9 +164,13 @@ public final class CustomDimensionManager {
     }
 
     /**
-     * Removes the definition file (and optionally schedules world data purge).
-     * The actual world data under <world>/dimensions/arcadia_custom/<id>/ is
-     * left untouched unless purge=true and the user understands a restart is needed.
+     * Removes the definition file so the dimension stops being emitted into the generated
+     * data pack — it is gone from the world on the next restart.
+     *
+     * With purge=true a marker is recorded, and the world data under
+     * &lt;world&gt;/dimensions/arcadia_custom/&lt;id&gt;/ is deleted by
+     * {@link CustomDimensionPack#runPendingPurges} once no level holds it open: on server
+     * shutdown, and again on the next startup if the server died before that.
      */
     public static synchronized boolean delete(String id, boolean purge) {
         if (!DEFINITIONS.containsKey(id) && !Files.exists(DIMENSIONS_DIR.resolve(id + ".json"))) return false;
@@ -245,19 +180,162 @@ public final class CustomDimensionManager {
             Files.deleteIfExists(file);
             DEFINITIONS.remove(id);
 
-            if (purge) {
-                Path purgeMarker = DIMENSIONS_DIR.resolve("_purge_" + id + ".marker");
-                Files.writeString(purgeMarker, "Delete <world>/dimensions/" + CUSTOM_NAMESPACE + "/" + id + " after server stop.",
-                        StandardCharsets.UTF_8);
-                ArcadiaSpawnMod.LOGGER.warn("Purge marker created for {} — manual cleanup required after shutdown.", id);
-            }
+            if (purge) schedulePurge(id);
 
             writeManifest();
+            CustomDimensionPack.regenerate();
             return true;
         } catch (IOException e) {
             ArcadiaSpawnMod.LOGGER.error("Failed to delete dimension {}", id, e);
             return false;
         }
+    }
+
+    // ── Purge markers ──────────────────────────────────────────────────────
+
+    private static void schedulePurge(String id) {
+        try {
+            Files.createDirectories(DIMENSIONS_DIR);
+            Files.writeString(purgeMarker(id),
+                    "Scheduled purge of <world>/dimensions/" + CUSTOM_NAMESPACE + "/" + id +
+                            ". Deleted automatically on server shutdown, retried on the next startup.",
+                    StandardCharsets.UTF_8);
+            ArcadiaSpawnMod.LOGGER.warn("World data of custom dimension {} scheduled for purge.", id);
+        } catch (IOException e) {
+            ArcadiaSpawnMod.LOGGER.error("Could not schedule purge for dimension {}", id, e);
+        }
+    }
+
+    static synchronized void cancelPurge(String id) {
+        try {
+            Files.deleteIfExists(purgeMarker(id));
+        } catch (IOException e) {
+            ArcadiaSpawnMod.LOGGER.warn("Could not clear purge marker for {}: {}", id, e.getMessage());
+        }
+    }
+
+    /** Ids whose world data is still waiting to be deleted. Never contains a live definition. */
+    static synchronized List<String> pendingPurges() {
+        if (!Files.exists(DIMENSIONS_DIR)) return List.of();
+        List<String> ids = new ArrayList<>();
+        try (var stream = Files.list(DIMENSIONS_DIR)) {
+            stream.map(p -> p.getFileName().toString())
+                    .filter(n -> n.startsWith(PURGE_PREFIX) && n.endsWith(PURGE_SUFFIX))
+                    .map(n -> n.substring(PURGE_PREFIX.length(), n.length() - PURGE_SUFFIX.length()))
+                    // The id is resolved against the world directory below, so re-validate it
+                    // here: a hand-written marker must not be able to carry ".." out of it.
+                    .filter(InputValidation::isValidDimensionId)
+                    .filter(id -> !DEFINITIONS.containsKey(id))
+                    .forEach(ids::add);
+        } catch (IOException e) {
+            ArcadiaSpawnMod.LOGGER.warn("Could not read pending dimension purges: {}", e.getMessage());
+        }
+        return ids;
+    }
+
+    private static Path purgeMarker(String id) {
+        return DIMENSIONS_DIR.resolve(PURGE_PREFIX + id + PURGE_SUFFIX);
+    }
+
+    // ── Data pack JSON generation ──────────────────────────────────────────
+
+    /** Serializes a definition to the vanilla {@code dimension_type} data pack format. */
+    static JsonObject toDimensionTypeJson(CustomDimensionDef def) {
+        int height = clampHeight(def.height);
+        int logicalHeight = Math.max(0, Math.min(def.logicalHeight, height));
+        int minY = DimensionRegistry.clampMinY(def.minY, height);
+
+        JsonObject o = new JsonObject();
+        // fixed_time is optional: present locks the sky, absent lets the day cycle run.
+        if (def.timeLocked) o.addProperty("fixed_time", Math.floorMod(def.fixedTime, 24000L));
+        o.addProperty("has_skylight", def.hasSkylight);
+        o.addProperty("has_ceiling", def.hasCeiling);
+        o.addProperty("ultrawarm", def.ultrawarm);
+        o.addProperty("natural", def.natural);
+        // Codec range is [1e-5, 3e7]; an out-of-range value aborts the whole world load.
+        o.addProperty("coordinate_scale", clamp(def.coordinateScale, 1.0E-5D, 3.0E7D));
+        o.addProperty("bed_works", def.bedWorks);
+        o.addProperty("respawn_anchor_works", def.respawnAnchorWorks);
+        o.addProperty("min_y", minY);
+        o.addProperty("height", height);
+        o.addProperty("logical_height", logicalHeight);
+        o.addProperty("infiniburn", validTagOrDefault(def.infiniburn, DEFAULT_INFINIBURN));
+        o.addProperty("effects", validIdOrDefault(def.effects, DEFAULT_EFFECTS));
+        o.addProperty("ambient_light", clamp(def.ambientLight, 0.0D, 1.0D));
+        o.addProperty("piglin_safe", def.piglinSafe);
+        o.addProperty("has_raids", def.hasRaids);
+        o.addProperty("monster_spawn_light_level", clamp(def.monsterSpawnLightLevel, 0, 15));
+        o.addProperty("monster_spawn_block_light_limit", clamp(def.monsterSpawnBlockLightLimit, 0, 15));
+        return o;
+    }
+
+    /** Serializes a definition to the vanilla {@code dimension} (level stem) data pack format. */
+    static JsonObject toLevelStemJson(CustomDimensionDef def) {
+        JsonObject settings = new JsonObject();
+        settings.add("layers", layersJson(def));
+        settings.addProperty("biome", validIdOrDefault(def.biome, DEFAULT_BIOME));
+        settings.addProperty("lakes", false);
+        settings.addProperty("features", def.generateFeatures);
+        settings.add("structure_overrides", new JsonArray());
+
+        JsonObject generator = new JsonObject();
+        generator.addProperty("type", "minecraft:flat");
+        generator.add("settings", settings);
+
+        JsonObject root = new JsonObject();
+        root.addProperty("type", CUSTOM_NAMESPACE + ":" + def.id);
+        root.add("generator", generator);
+        return root;
+    }
+
+    private static JsonArray layersJson(CustomDimensionDef def) {
+        // parseLayersPublic drops entries whose block id does not resolve, so a typo in a
+        // definition costs one layer instead of breaking the world load.
+        List<FlatLayerInfo> layers = DimensionRegistry.parseLayersPublic(def.layers);
+        if (layers.isEmpty()) {
+            ArcadiaSpawnMod.LOGGER.warn("Custom dimension {} has no usable layer, falling back to bedrock.", def.id);
+            layers = List.of(new FlatLayerInfo(1, Blocks.BEDROCK));
+        }
+
+        JsonArray arr = new JsonArray();
+        for (FlatLayerInfo layer : layers) {
+            JsonObject entry = new JsonObject();
+            entry.addProperty("block", BuiltInRegistries.BLOCK.getKey(layer.getBlockState().getBlock()).toString());
+            entry.addProperty("height", layer.getHeight());
+            arr.add(entry);
+        }
+        return arr;
+    }
+
+    private static int clampHeight(int h) {
+        if (h > 2032) h = 2032;
+        if (h < 16) h = 16;
+        return (h >> 4) << 4;
+    }
+
+    private static int clamp(int v, int min, int max) {
+        return Math.max(min, Math.min(max, v));
+    }
+
+    private static double clamp(double v, double min, double max) {
+        if (Double.isNaN(v)) return min;
+        return Math.max(min, Math.min(max, v));
+    }
+
+    private static String validIdOrDefault(String value, String fallback) {
+        if (value == null || ResourceLocation.tryParse(value) == null) {
+            ArcadiaSpawnMod.LOGGER.warn("Invalid resource id {} in a custom dimension, using {}.", value, fallback);
+            return fallback;
+        }
+        return value;
+    }
+
+    private static String validTagOrDefault(String value, String fallback) {
+        if (value == null || !value.startsWith("#") || ResourceLocation.tryParse(value.substring(1)) == null) {
+            ArcadiaSpawnMod.LOGGER.warn("Invalid block tag {} in a custom dimension, using {}.", value, fallback);
+            return fallback;
+        }
+        return value;
     }
 
     private static void writeManifest() {
@@ -274,6 +352,9 @@ public final class CustomDimensionManager {
             hint.addProperty("on_mod_removal",
                     "If this mod is uninstalled, manually delete the following from your world save: " +
                     "world/dimensions/" + CUSTOM_NAMESPACE + "/<id> for each listed dimension.");
+            hint.addProperty("generated_pack",
+                    "Regenerated from these files at every startup, do not edit by hand: " +
+                    CustomDimensionPack.packRoot());
             root.add("cleanup", hint);
 
             Files.createDirectories(DIMENSIONS_DIR);
